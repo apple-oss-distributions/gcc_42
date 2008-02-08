@@ -116,8 +116,10 @@ fi
 
 # Build lines.
 
-gcc_compile='$(GCC_FOR_TARGET) $(LIBGCC2_CFLAGS) $(INCLUDES)'
-gcc_s_compile="$gcc_compile -DSHARED"
+# APPLE LOCAL gcov 5573505
+gcc_compile='$(GCC_FOR_TARGET) $(LIBGCC2_STATIC_CFLAGS) $(LIBGCC2_CFLAGS) $(INCLUDES)'
+# APPLE LOCAL gcov 5573505
+gcc_s_compile='$(GCC_FOR_TARGET) $(LIBGCC2_CFLAGS) $(INCLUDES)'" -DSHARED"
 make_compile='$(MAKE) GCC_FOR_TARGET="$(GCC_FOR_TARGET)" \
 	  AR_FOR_TARGET="$(AR_FOR_TARGET)" \
 	  AR_CREATE_FOR_TARGET="$(AR_CREATE_FOR_TARGET)" \
@@ -742,6 +744,8 @@ for ml in $MULTILIBS; do
     echo extra$suffix: stmp-dirs
     echo "	$make_compile" \\
     echo '	  LIBGCC2_CFLAGS="$(LIBGCC2_CFLAGS)' $flags '" ' \\
+    # APPLE LOCAL gcov 5573505
+    echo '	  LIBGCC2_STATIC_CFLAGS="$(LIBGCC2_STATIC_CFLAGS)" ' \\
     echo '	  MULTILIB_CFLAGS="'$flags'"' T=$t $extra
     echo "all: extra$suffix"
 

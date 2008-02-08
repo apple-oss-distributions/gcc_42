@@ -1871,7 +1871,7 @@ build_component_ref (tree datum, tree component)
 
 	  /* APPLE LOCAL begin "unavailable" attribute (radar 2809697) */
 	  if (TREE_UNAVAILABLE (subdatum))
-	    warn_unavailable_use (subdatum);
+	    error_unavailable_use (subdatum);
 	  /* APPLE LOCAL end "unavailable" attribute (radar 2809697) */
 
 	  datum = ref;
@@ -2101,7 +2101,14 @@ build_external_ref (tree id, int fun, location_t loc)
 	  /* Locals and parms just need to be left alone for now.  */
 	}
       else
-	return iasm_do_id (id);
+	{
+	  location_t save = input_location;
+	  tree r;
+	  input_location = loc;
+	  r = iasm_do_id (id);
+	  input_location = save;
+	  return r;
+	}
     }
   /* APPLE LOCAL end CW asm blocks */
 
@@ -2132,7 +2139,7 @@ build_external_ref (tree id, int fun, location_t loc)
 
   /* APPLE LOCAL begin "unavailable" attribute (radar 2809697) */
   if (TREE_UNAVAILABLE (ref))
-    warn_unavailable_use (ref);
+    error_unavailable_use (ref);
   /* APPLE LOCAL end "unavailable" attribute (radar 2809697) */
 
   if (!skip_evaluation)
@@ -2742,6 +2749,7 @@ parser_build_binary_op (enum tree_code code, struct c_expr arg1,
 	    || TREE_CODE (arg1.value) == IDENTIFIER_NODE
 	    || TREE_CODE (arg2.value) == IDENTIFIER_NODE)
         {
+	  error ("block assembly operand not recognized");
           result.value = error_mark_node;
           result.original_code = code;
           return result;
@@ -7356,7 +7364,7 @@ iasm_c_build_component_ref (tree typename, tree component)
 
 	  /* APPLE LOCAL begin "unavailable" attribute (radar 2809697) */
 	  if (TREE_UNAVAILABLE (subdatum))
-	    warn_unavailable_use (subdatum);
+	    error_unavailable_use (subdatum);
 	  /* APPLE LOCAL end "unavailable" attribute (radar 2809697) */
 
 	  fake_datum = ref;

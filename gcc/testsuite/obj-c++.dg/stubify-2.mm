@@ -3,7 +3,9 @@
 /* Testcase extracted from TextEdit:Document.m.  */
 
 /* { dg-do compile { target *-*-darwin* } } */
-/* { dg-options "-mdynamic-no-pic -fdump-rtl-jump" } */
+/* { dg-require-effective-target ilp32 } */
+/* APPLE LOCAL axe stubs 5571540 */
+/* { dg-options "-mdynamic-no-pic -fdump-rtl-jump -mmacosx-version-min=10.4" } */
 
 typedef struct objc_object { } *id ;
 int x = 41 ;

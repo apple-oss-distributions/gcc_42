@@ -44,6 +44,10 @@ Boston, MA 02110-1301, USA.  */
 extern int machopic_symbol_defined_p (rtx);
 /* APPLE LOCAL end dynamic-no-pic */
 
+/* APPLE LOCAL begin axe stubs 5571540 */
+extern int darwin_stubs;
+/* APPLE LOCAL end axe stubs 5571540 */
+
 /* APPLE LOCAL begin mainline 2006-11-01 3334812 */
 /* Don't assume anything about the header files.  */
 #define NO_IMPLICIT_EXTERN_C
@@ -185,6 +189,13 @@ extern int darwin_running_cxx;
 extern GTY(()) int darwin_reverse_bitfields;
 /* APPLE LOCAL end pragma reverse_bitfields */
 
+/* APPLE LOCAL begin ARM 5683689 */
+enum darwin_version_type {
+  DARWIN_VERSION_MACOSX,
+  DARWIN_VERSION_ASPEN
+};
+/* APPLE LOCAL end ARM 5683689 */
+
 /* APPLE LOCAL AT&T-style stub 4164563 */
 #define MACHOPIC_ATT_STUB (darwin_macho_att_stub)
 
@@ -196,6 +207,11 @@ extern GTY(()) int darwin_reverse_bitfields;
 	warn_pointer_sign = 1;						\
 	CPP_OPTION (parse_in, pascal_strings) = 1;			\
       }									\
+    /* APPLE LOCAL begin ARM 5683689 */					\
+    if (darwin_macosx_version_min && darwin_aspen_version_min)		\
+      error ("-mmacosx-version-min not allowed with"			\
+             " -maspen-version-min");					\
+    /* APPLE LOCAL end ARM 5683689 */					\
     /* The c_dialect...() macros are not available to us here.  */	\
     darwin_running_cxx = (strstr (lang_hooks.name, "C++") != 0);	\
     /* APPLE LOCAL end constant cfstrings */				\
@@ -309,9 +325,9 @@ do {					\
 "/* APPLE LOCAL begin mainline 4.3 2006-10-31 4370146 */"\
     %{!A:%{!nostdlib:%{!nostartfiles:%E}}} %{T*} %{F*} }}}}}}}}\n\
 %{!fdump=*:%{!fsyntax-only:%{!c:%{!M:%{!MM:%{!E:%{!S:\
-    %{.c|.cc|.C|.cpp|.cp|.c++|.cxx|.CPP|.m|.mm: \
-    %{g*:%{!gstabs*:%{!g0: dsymutil %{o*:%*}%{!o:a.out}}}}}}}}}}}}"
-/* APPLE LOCAL end mainline 4.3 2006-10-31 4370146 */
+"/* APPLE LOCAL end mainline 4.3 2006-10-31 4370146 */"\
+"/* APPLE LOCAL ARM 5342595 */"\
+    %{.c|.cc|.C|.cpp|.cp|.c++|.cxx|.CPP|.m|.mm: %(darwin_dsymutil) }}}}}}}}"
 /* APPLE LOCAL end mainline */
 
 #ifdef TARGET_SYSTEM_ROOT
@@ -372,10 +388,11 @@ do {					\
    %{headerpad_max_install_names*} \
    %{Zimage_base*:-image_base %*} \
    %{Zinit*:-init %*} \
-   "/* APPLE LOCAL begin mainline 2007-02-20 5005743 */" \
-   %{!mmacosx-version-min=*:-macosx_version_min %(darwin_minversion)} \
+   "/* APPLE LOCAL begin ARM 5683689 */"\
+   %{!mmacosx-version-min=*: %{!maspen-version-min=*: %(darwin_ld_minversion)}} \
    %{mmacosx-version-min=*:-macosx_version_min %*} \
-   "/* APPLE LOCAL end mainline 2007-02-20 5005743 */" \
+   %{maspen-version-min=*:-aspen_version_min %*} \
+   "/* APPLE LOCAL end ARM 5683689 */"\
    %{nomultidefs} \
    %{Zmulti_module:-multi_module} %{Zsingle_module:-single_module} \
    %{Zmultiply_defined*:-multiply_defined %*} \
@@ -431,6 +448,8 @@ do {					\
 #define REAL_LIBGCC_SPEC						   \
 /* APPLE LOCAL libgcc_static.a  */					   \
    "%{static:-lgcc_static; static-libgcc: -lgcc_eh -lgcc;		   \
+      "/* APPLE LOCAL ARM 5683689 */"					   \
+      maspen-version-min=*: -lgcc_s.10.5 -lgcc;				   \
       shared-libgcc|fexceptions|fgnu-runtime:				   \
        %:version-compare(!> 10.5 mmacosx-version-min= -lgcc_s.10.4)	   \
        %:version-compare(>= 10.5 mmacosx-version-min= -lgcc_s.10.5)	   \
@@ -472,16 +491,29 @@ do {					\
 #define DARWIN_EXTRA_SPECS						\
   { "darwin_crt1", DARWIN_CRT1_SPEC },					\
   { "darwin_dylib1", DARWIN_DYLIB1_SPEC },				\
-  { "darwin_minversion", DARWIN_MINVERSION_SPEC },
+  { "darwin_minversion", DARWIN_MINVERSION_SPEC },			\
+/* APPLE LOCAL end mainline */						\
+/* APPLE LOCAL begin ARM 5683689 */					\
+  { "darwin_cc1_minversion", DARWIN_CC1_MINVERSION_SPEC },		\
+  { "darwin_ld_minversion", DARWIN_LD_MINVERSION_SPEC },		\
+/* APPLE LOCAL end ARM 5683689 */					\
+/* APPLE LOCAL begin ARM 5342595 */					\
+  { "darwin_dsymutil", DARWIN_DSYMUTIL_SPEC },
+/* APPLE LOCAL end ARM 5342595 */
 
+/* APPLE LOCAL begin ARM 5683689 */
 #define DARWIN_DYLIB1_SPEC						\
-  "%:version-compare(!> 10.5 mmacosx-version-min= -ldylib1.o)		\
-   %:version-compare(>= 10.5 mmacosx-version-min= -ldylib1.10.5.o)"
+  "%{maspen-version-min=*: -ldylib1.10.5.o}				\
+   %{!maspen-version-min=*:						\
+     %:version-compare(!> 10.5 mmacosx-version-min= -ldylib1.o)		\
+     %:version-compare(>= 10.5 mmacosx-version-min= -ldylib1.10.5.o)}"
 
 #define DARWIN_CRT1_SPEC						\
-  "%:version-compare(!> 10.5 mmacosx-version-min= -lcrt1.o)		\
-   %:version-compare(>= 10.5 mmacosx-version-min= -lcrt1.10.5.o)"
-/* APPLE LOCAL end mainline */
+  "%{maspen-version-min=*: -lcrt1.10.5.o}				\
+   %{!maspen-version-min=*:						\
+     %:version-compare(!> 10.5 mmacosx-version-min= -lcrt1.o)		\
+     %:version-compare(>= 10.5 mmacosx-version-min= -lcrt1.10.5.o)}"
+/* APPLE LOCAL end ARM 5683689 */
 
 /* Default Darwin ASM_SPEC, very simple.  */
 /* APPLE LOCAL begin radar 4161346 */
@@ -653,7 +685,10 @@ do {					\
 #undef OBJC_FLAG_ZEROCOST_EXCEPTIONS
 #define OBJC_FLAG_ZEROCOST_EXCEPTIONS						\
   do {									\
-       if (strverscmp (darwin_macosx_version_min, "10.5") < 0) 		\
+       /* APPLE LOCAL begin ARM 5683689 */				\
+       if (darwin_macosx_version_min					\
+	   && strverscmp (darwin_macosx_version_min, "10.5") < 0)	\
+       /* APPLE LOCAL end ARM 5683689 */				\
 	 error ("Mac OS X version 10.5 or later is needed for zerocost-exceptions"); \
      } while (0)
 /* APPLE LOCAL end radar 5023725 */
@@ -667,6 +702,10 @@ do {					\
          } 								\
        if (flag_objc_abi == -1)						\
          flag_objc_abi = (flag_next_runtime && TARGET_64BIT) ? 2 : 1;	\
+       /* APPLE LOCAL begin ARM hybrid objc-2.0 */			\
+       if (flag_objc_legacy_dispatch == -1)				\
+	 flag_objc_legacy_dispatch = (flag_objc_abi < 2);		\
+       /* APPLE LOCAL end ARM hybrid objc-2.0 */			\
          /* APPLE LOCAL begin radar 2848255 */                          \
         /* APPLE LOCAL begin radar 5023725 */                           \
         if (flag_objc_abi == 2)                                         \
@@ -683,14 +722,29 @@ do {					\
              flag_objc_abi = 2;  /* recover */                          \
            }                                                            \
          /* APPLE LOCAL end radar 2848255 */                            \
+	/* APPLE LOCAL begin 5660282 */					\
+	if (darwin_aspen_version_min && flag_objc_gc)			\
+	  {								\
+	    warning (0, "-fobjc-gc not supported for Aspen; ignoring.");\
+	    flag_objc_gc = 0;						\
+	  }								\
+	if (darwin_aspen_version_min && flag_objc_gc_only)		\
+	  {								\
+	    warning (0, "-fobjc-gc-only not supported for Aspen; ignoring.");\
+	    flag_objc_gc_only = 0;					\
+	  }								\
+	/* APPLE LOCAL end 5660282 */					\
   } while (0)
 /* APPLE LOCAL end radar 4862848 */
 
 /* APPLE LOCAL begin radar 4531086 */
 #undef OBJC_WARN_OBJC2_FEATURES
 #define OBJC_WARN_OBJC2_FEATURES(MESSAGE)				\
+  /* APPLE LOCAL begin ARM 5683689 */					\
   do {									\
-    if (strverscmp (darwin_macosx_version_min, "10.5") < 0)		\
+    if (darwin_macosx_version_min					\
+	&& strverscmp (darwin_macosx_version_min, "10.5") < 0)		\
+  /* APPLE LOCAL end ARM 5683689 */					\
       warning (0, "Mac OS X version 10.5 or later is needed for use of %s", \
 	       MESSAGE);						\
   } while (0)
@@ -724,9 +778,17 @@ do {					\
       assemble_zeros (1);						\
   } while (0)
 
+/* APPLE LOCAL begin ARM darwin target */
+#ifndef SUBTARGET_ASM_DECLARE_FUNCTION_NAME
+#define SUBTARGET_ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)
+#endif
+/* APPLE LOCAL end ARM darwin target */
+
 #define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)			\
   do {									\
     const char *xname = NAME;						\
+    /* APPLE LOCAL ARM darwin target */					\
+    SUBTARGET_ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL);		\
     if (GET_CODE (XEXP (DECL_RTL (DECL), 0)) != SYMBOL_REF)		\
       xname = IDENTIFIER_POINTER (DECL_NAME (DECL));			\
     if (! DECL_WEAK (DECL)						\
@@ -1066,7 +1128,9 @@ enum machopic_addr_class {
 
 #define DARWIN_REGISTER_TARGET_PRAGMAS()			\
   do {								\
-    c_register_pragma (0, "mark", darwin_pragma_ignore);	\
+    /* APPLE LOCAL begin pragma mark 5614511 */			\
+    /* Removed mark.  */					\
+    /* APPLE LOCAL end pragma mark 5614511 */			\
     c_register_pragma (0, "options", darwin_pragma_options);	\
     c_register_pragma (0, "segment", darwin_pragma_ignore);	\
     /* APPLE LOCAL pragma fenv */                               \
@@ -1136,15 +1200,24 @@ extern void abort_assembly_and_exit (int status) ATTRIBUTE_NORETURN;
 /* APPLE LOCAL begin zerofill 20020218 --turly  */
 /* This keeps uninitialized data from bloating the data when -fno-common.
    Radar 2863107.  */
-#define ASM_OUTPUT_ZEROFILL(FILE, NAME, SIZE, ALIGNMENT)		    \
-  do {									    \
-    unsigned HOST_WIDE_INT _new_size = SIZE;		    		    \
-    if (_new_size == 0) _new_size = 1;					    \
-    fputs (".zerofill __DATA, __common, ", (FILE));			    \
-    assemble_name ((FILE), (NAME));					    \
-    fprintf ((FILE), ", " HOST_WIDE_INT_PRINT_DEC, _new_size); 		    \
-    fprintf ((FILE), ", " HOST_WIDE_INT_PRINT_DEC "\n",			    \
-	     (HOST_WIDE_INT) (ALIGNMENT));				    \
+#define ASM_OUTPUT_ZEROFILL(FILE, NAME, SECT, SIZE, ALIGNMENT)	\
+  do {								\
+    section *darwin_sect = SECT;				\
+								\
+    unsigned HOST_WIDE_INT _new_size = SIZE;			\
+    if (_new_size == 0) _new_size = 1;				\
+    fputs (".zerofill ", (FILE));				\
+    if (darwin_sect->common.flags & SECTION_NAMED)		\
+      {								\
+	fputs (darwin_sect->named.name, (FILE));		\
+	fputs (", ", (FILE));					\
+      }								\
+    else							\
+      fputs ("__DATA, __common, ", (FILE));			\
+    assemble_name ((FILE), (NAME));				\
+    fprintf ((FILE), ", " HOST_WIDE_INT_PRINT_DEC, _new_size);	\
+    fprintf ((FILE), ", " HOST_WIDE_INT_PRINT_DEC "\n",		\
+	     (HOST_WIDE_INT) (ALIGNMENT));			\
   } while (0)
 /* APPLE LOCAL end zerofill 20020218 --turly  */
 
@@ -1274,11 +1347,14 @@ extern int flag_apple_kext;
 
 /* APPLE LOCAL begin mainline 2007-06-14 5235474 */
 #ifndef CROSS_DIRECTORY_STRUCTURE
-extern void darwin_default_min_version (int * argc, char *** argv);
+/* APPLE LOCAL begin ARM 5683689 */
+extern void darwin_default_min_version (int * argc, char *** argv,
+					enum darwin_version_type vers_type);
 #define GCC_DRIVER_HOST_INITIALIZATION \
   /* APPLE LOCAL isysroot 5083137 */ \
   GCC_DRIVER_HOST_INITIALIZATION1; \
-  darwin_default_min_version (&argc, &argv)
+  darwin_default_min_version (&argc, &argv, DARWIN_DEFAULT_VERSION_TYPE)
+/* APPLE LOCAL end ARM 5683689 */
 #endif /* CROSS_DIRECTORY_STRUCTURE */
 /* APPLE LOCAL end mainline 2007-06-14 5235474 */
 

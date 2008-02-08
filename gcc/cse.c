@@ -4139,6 +4139,8 @@ fold_rtx (rtx x, rtx insn)
 				  && rtx_equal_p (ent->comparison_const,
 						  const_arg1))
 			      || (REG_P (folded_arg1)
+				  /* APPLE LOCAL ARM 4587904 */
+				  && (REGNO_QTY_VALID_P (REGNO (folded_arg1)))
 				  && (REG_QTY (REGNO (folded_arg1)) == ent->comparison_qty))))
 			return (comparison_dominates_p (ent->comparison_code, code)
 				? true_rtx : false_rtx);
@@ -4955,6 +4957,14 @@ cse_insn (rtx insn, rtx libcall_insn)
 	      else if (SET_DEST (y) == pc_rtx
 		       && GET_CODE (SET_SRC (y)) == LABEL_REF)
 		;
+              /* APPLE LOCAL begin radar 5596043, mainline candidate */
+              /* Ignore the asm operand of an inline assembly instruction
+                 when finding all the SETs and invalidate its target. */
+              else if (GET_CODE (SET_SRC (y)) == ASM_OPERANDS)
+                {		
+	            invalidate (XEXP (y, 0), VOIDmode);
+                }
+              /* APPLE LOCAL end radar 5596043, mainline candidate */
 	      else
 		sets[n_sets++].rtl = y;
 	    }

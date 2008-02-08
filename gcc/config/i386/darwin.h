@@ -93,8 +93,10 @@ Boston, MA 02110-1301, USA.  */
 
 #undef CC1_SPEC
 #define CC1_SPEC "%{!mkernel:%{!static:%{!mdynamic-no-pic:-fPIC}}} \
-"/* APPLE LOCAL mainline 2007-02-20 5005743 */" \
-  %{!mmacosx-version-min=*:-mmacosx-version-min=%(darwin_minversion)} \
+  "/* APPLE LOCAL ARM ignore -mthumb and -mno-thumb */"\
+  %<mthumb %<mno-thumb \
+  "/* APPLE LOCAL ARM 5683689 */"\
+  %{!mmacosx-version-min=*: %{!maspen-version-min=*: %(darwin_cc1_minversion)}} \
   "/* APPLE LOCAL ignore -mcpu=G4 -mcpu=G5 */"\
   %<faltivec %<mno-fused-madd %<mlong-branch %<mlongcall %<mcpu=G4 %<mcpu=G5 \
   %{g: %{!fno-eliminate-unused-debug-symbols: -feliminate-unused-debug-symbols }}"
@@ -120,6 +122,21 @@ Boston, MA 02110-1301, USA.  */
     :10.4}"
 
 /* APPLE LOCAL end mainline 2007-03-13 5005743 5040758 */ \
+/* APPLE LOCAL begin ARM 5683689 */
+/* Default cc1 option for specifying minimum version number.  */
+#define DARWIN_CC1_MINVERSION_SPEC "-mmacosx-version-min=%(darwin_minversion)"
+
+/* Default ld option for specifying minimum version number.  */
+#define DARWIN_LD_MINVERSION_SPEC "-macosx_version_min %(darwin_minversion)"
+
+/* Use macosx version numbers by default.  */
+#define DARWIN_DEFAULT_VERSION_TYPE  DARWIN_VERSION_MACOSX
+/* APPLE LOCAL end ARM 5683689 */
+/* APPLE LOCAL begin 5342595 */
+#define DARWIN_DSYMUTIL_SPEC \
+  "%{g*:%{!gstabs*:%{!g0: dsymutil %{o*:%*}%{!o:a.out}}}}"
+/* APPLE LOCAL end 5342595 */
+
 #undef SUBTARGET_EXTRA_SPECS
 #define SUBTARGET_EXTRA_SPECS                                   \
   DARWIN_EXTRA_SPECS                                            \
@@ -248,7 +265,8 @@ extern void darwin_x86_file_end (void);
 #undef FUNCTION_PROFILER
 #define FUNCTION_PROFILER(FILE, LABELNO)				\
     do {								\
-      if (MACHOPIC_INDIRECT && !TARGET_64BIT)				\
+      /* APPLE LOCAL axe stubs 5571540 */				\
+      if (darwin_stubs && MACHOPIC_INDIRECT && !TARGET_64BIT)		\
 	{								\
 	  const char *name = machopic_mcount_stub_name ();		\
 	  fprintf (FILE, "\tcall %s\n", name+1);  /*  skip '&'  */	\
@@ -263,6 +281,11 @@ extern int flag_iasm_blocks;
 #undef SUBTARGET_OVERRIDE_OPTIONS
 #define SUBTARGET_OVERRIDE_OPTIONS				\
   do {								\
+    /* APPLE LOCAL begin ARM 5683689 */				\
+    if (!darwin_macosx_version_min				\
+	&& !darwin_aspen_version_min)				\
+      darwin_macosx_version_min = "10.1";			\
+    /* APPLE LOCAL end ARM 5683689 */				\
     /* APPLE LOCAL begin CW asm blocks */			\
     if (flag_iasm_blocks)					\
       flag_ms_asms = 1;						\
@@ -276,6 +299,22 @@ extern int flag_iasm_blocks;
 	if (MACHO_DYNAMIC_NO_PIC_P)				\
 	  target_flags &= ~MASK_MACHO_DYNAMIC_NO_PIC;		\
       }								\
+    /* APPLE LOCAL begin fix this for mainline */		\
+    /* For mainline this needs to be fixed to have every	\
+       cpu architecture feature as an isa mask.	 Every		\
+       cpu we've shipped supports all of these features.	\
+       This includes all ix86_arch cpu features currently	\
+       defined except x86_cmove which is turned on for		\
+       TARGET_SSE anyhow.  */					\
+    if (!ix86_arch_string)					\
+      {								\
+	x86_cmpxchg = ~(0);					\
+	x86_cmpxchg8b = ~(0);					\
+	x86_cmpxchg16b = ~(0);					\
+	x86_xadd = ~(0);					\
+	x86_bswap = ~(0);					\
+      }								\
+    /* APPLE LOCAL end fix this for mainline */			\
   } while (0)
 
 /* True, iff we're generating fast turn around debugging code.  When
@@ -368,9 +407,12 @@ extern void ix86_darwin_init_expanders (void);
     }
 /* APPLE LOCAL end mainline */
 /* APPLE LOCAL begin track initialization status 4964532  */
+/* APPLE LOCAL begin ARM 5683689 */
 #undef  TARGET_DWARF_UNINIT_VARS
 #define TARGET_DWARF_UNINIT_VARS   \
-  (strverscmp (darwin_macosx_version_min, "10.4") >= 0)
+  (darwin_aspen_version_min ||	   \
+   strverscmp (darwin_macosx_version_min, "10.4") >= 0)
+/* APPLE LOCAL end ARM 5683689 */
 /* APPLE LOCAL end track initialization status 4964532  */
 
 /* This needs to move since i386 uses the first flag and other flags are

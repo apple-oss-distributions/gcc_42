@@ -83,6 +83,7 @@ objc_memmove_collectable(void *dst, const void *src, size_t size)
 int main(void) {
    struct type_s local;
    struct type_s *p;
+   int old_count;
 
    NamedObject *object = [[NamedObject alloc] init];
 
@@ -113,10 +114,11 @@ int main(void) {
     abort ();
    
    /* class assignment with overloaded '=' operator must NOT call the new API. */
+   old_count = count;
    nono nono_rhs (89);
    nono nono_lhs (100);
    nono_lhs = nono_rhs;
-  if (count != 5 || nono_lhs.nono_val.may_recurse.ii != 89)
+  if (count != old_count || nono_lhs.nono_val.may_recurse.ii != 89)
     abort ();
    
    return 0;

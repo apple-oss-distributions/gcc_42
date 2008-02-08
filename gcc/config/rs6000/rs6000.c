@@ -689,6 +689,8 @@ static int rs6000_use_sched_lookahead (void);
 static tree rs6000_builtin_mask_for_load (void);
 
 static void def_builtin (int, const char *, tree, int);
+/* APPLE LOCAL mainline 4.2 5569774 */
+static bool rs6000_vector_alignment_reachable (tree, bool);
 static void rs6000_init_builtins (void);
 static rtx rs6000_expand_unop_builtin (enum insn_code, tree, rtx);
 static rtx rs6000_expand_binop_builtin (enum insn_code, tree, rtx);
@@ -841,6 +843,8 @@ char rs6000_reg_names[][8] =
       "spe_acc", "spefscr",
       /* Soft frame pointer.  */
       "sfp"
+      /* APPLE LOCAL 3399553 */
+      , "fpscr"
 };
 
 #ifdef TARGET_REGNAMES
@@ -867,6 +871,8 @@ static const char alt_reg_names[][8] =
   "spe_acc", "spefscr",
   /* Soft frame pointer.  */
   "sfp"
+  /* APPLE LOCAL 3399553 */
+  , "fpscr"
 };
 #endif
 
@@ -954,6 +960,11 @@ static const char alt_reg_names[][8] =
 
 #undef TARGET_VECTORIZE_BUILTIN_MASK_FOR_LOAD
 #define TARGET_VECTORIZE_BUILTIN_MASK_FOR_LOAD rs6000_builtin_mask_for_load
+
+/* APPLE LOCAL begin mainline 4.2 5569774 */
+#undef TARGET_VECTOR_ALIGNMENT_REACHABLE
+#define TARGET_VECTOR_ALIGNMENT_REACHABLE rs6000_vector_alignment_reachable
+/* APPLE LOCAL end mainline 4.2 5569774 */
 
 #undef TARGET_INIT_BUILTINS
 #define TARGET_INIT_BUILTINS rs6000_init_builtins
@@ -1089,6 +1100,10 @@ static const char alt_reg_names[][8] =
 #define TARGET_ASM_OUTPUT_DWARF_DTPREL rs6000_output_dwarf_dtprel
 #endif
 
+/* APPLE LOCAL begin radar 5155743, mainline candidate */
+#undef TARGET_HAVE_DYNAMIC_STACK_SPACE
+#define TARGET_HAVE_DYNAMIC_STACK_SPACE true
+/* APPLE LOCAL end radar 5155743, mainline candidate */
 /* Use a 32-bit anchor range.  This leads to sequences like:
 
 	addis	tmp,anchor,high
@@ -1159,6 +1174,17 @@ rs6000_init_hard_regno_mode_ok (void)
 	rs6000_hard_regno_mode_ok_p[m][r] = true;
 }
 
+/* APPLE LOCAL begin axe stubs 5571540 */
+#ifndef DARWIN_LINKER_GENERATES_ISLANDS
+#define DARWIN_LINKER_GENERATES_ISLANDS 0
+#endif
+
+/* KEXTs still need branch islands.  */
+#define DARWIN_GENERATE_ISLANDS (!DARWIN_LINKER_GENERATES_ISLANDS \
+				 || flag_mkernel || flag_apple_kext \
+				 || (!flag_pic && !MACHO_DYNAMIC_NO_PIC_P))
+/* APPLE LOCAL end axe stubs 5571540 */
+
 /* APPLE LOCAL begin mainline 2007-02-20 5005743 */ \
 #if TARGET_MACHO
 /* The Darwin version of SUBTARGET_OVERRIDE_OPTIONS.  */
@@ -1171,11 +1197,19 @@ darwin_rs6000_override_options (void)
   rs6000_altivec_abi = 1;
   TARGET_ALTIVEC_VRSAVE = 1;
 
+  /* APPLE LOCAL begin ARM 5683689 */
+  if (!darwin_macosx_version_min && !darwin_aspen_version_min)
+    darwin_macosx_version_min = "10.1";
+  /* APPLE LOCAL end ARM 5683689 */
+
+  /* APPLE LOCAL begin ARM 5683689 */
   /* APPLE LOCAL begin constant cfstrings */
   if (darwin_constant_cfstrings < 0)
-    darwin_constant_cfstrings = (strverscmp (darwin_macosx_version_min, "10.2")
-				 >= 0);
+    darwin_constant_cfstrings = 
+      darwin_aspen_version_min
+      || (strverscmp (darwin_macosx_version_min, "10.2") >= 0);
   /* APPLE LOCAL end constant cfstrings */
+  /* APPLE LOCAL end ARM 5683689 */
 
   if (DEFAULT_ABI == ABI_DARWIN)
   {
@@ -1217,12 +1251,21 @@ darwin_rs6000_override_options (void)
      G4 unless targetting the kernel.  */
   if (!flag_mkernel
       && !flag_apple_kext
+      /* APPLE LOCAL ARM 5683689 */
+      && darwin_macosx_version_min
       && strverscmp (darwin_macosx_version_min, "10.5") >= 0
       && ! (target_flags_explicit & MASK_ALTIVEC)
       && ! rs6000_select[1].string)
     {
       target_flags |= MASK_ALTIVEC;
     }
+
+  /* APPLE LOCAL begin axe stubs 5571540 */
+  /* I'm not sure if the branch island code needs stubs or not, so
+     assume they do.  */
+  if (DARWIN_GENERATE_ISLANDS)
+    darwin_stubs = true;
+  /* APPLE LOCAL end axe stubs 5571540 */
 }
 #endif
 
@@ -1344,9 +1387,9 @@ rs6000_override_options (const char *default_cpu)
 
   /* APPLE LOCAL begin -mmultiple/-mstring fixme */
   /* Save current -mmultiple/-mno-multiple status.  */
-  int multiple = TARGET_MULTIPLE;
+  int multiple = (target_flags & MASK_MULTIPLE);
   /* Save current -mstring/-mno-string status.  */
-  int string = TARGET_STRING;
+  int string = (target_flags & MASK_STRING);
   /* APPLE LOCAL end -mmultiple/-mstring fixme */
 
   /* Some OSs don't support saving the high part of 64-bit registers on
@@ -1838,6 +1881,39 @@ rs6000_builtin_mask_for_load (void)
     return 0;
 }
 
+/* APPLE LOCAL begin mainline 4.2 5569774 */
+/* Return true iff, data reference of TYPE can reach vector alignment (16)
+   after applying N number of iterations.  This routine does not determine
+   how may iterations are required to reach desired alignment.  */
+
+static bool
+rs6000_vector_alignment_reachable (tree type ATTRIBUTE_UNUSED, bool is_packed)
+{
+  if (is_packed)
+    return false;
+
+  if (TARGET_32BIT)
+    {
+      if (rs6000_alignment_flags == MASK_ALIGN_NATURAL)
+        return true;
+
+      if (rs6000_alignment_flags ==  MASK_ALIGN_POWER)
+        return true;
+
+      return false;
+    }
+  else
+    {
+      if (TARGET_MACHO)
+	/* APPLE LOCAL 5643197 */
+	return (rs6000_alignment_flags == MASK_ALIGN_NATURAL);
+
+      /* Assuming that all other types are naturally aligned. CHECKME!  */
+      return true;
+    }
+}
+/* APPLE LOCAL end mainline 4.2 5569774 */
+
 /* Handle generic options of the form -mfoo=yes/no.
    NAME is the option name.
    VALUE is the option value.
@@ -2258,7 +2334,9 @@ rs6000_handle_option (size_t code, const char *arg, int value)
 	     forbid its use.  */
 	  if (DEFAULT_ABI == ABI_DARWIN && TARGET_64BIT)
 	    error ("-malign-mac68k is not allowed for 64-bit Darwin");
-	  rs6000_alignment_flags = OPTION_ALIGN_MAC68K;
+	  /* APPLE LOCAL begin radar 5134231 */
+	  rs6000_alignment_flags = OPTION_MASK_ALIGN_MAC68K;
+	  /* APPLE LOCAL end radar 5134231 */
 	}
     /* APPLE LOCAL end Macintosh alignment 2002-2-26 --ff */
       else
@@ -3031,6 +3109,70 @@ rs6000_special_round_type_align (tree type, unsigned int computed,
   return align;
 }
 
+/* APPLE LOCAL begin mainline 2006-10-31 PR 23067, radar 4869885 */
+/* Darwin increases record alignment to the natural alignment of
+   the first field.  */
+
+unsigned int
+darwin_rs6000_special_round_type_align (tree type, unsigned int computed,
+					unsigned int specified)
+{
+  unsigned int align = MAX (computed, specified);
+
+  if (TYPE_PACKED (type))
+    return align;
+
+  /* Find the first field, looking down into aggregates.  */
+  /* APPLE LOCAL begin radar 4869885 */
+  {
+    tree field = TYPE_FIELDS (type);
+    /* Skip all non field decls */
+    while (field != NULL && TREE_CODE (field) != FIELD_DECL)
+      field = TREE_CHAIN (field);
+    if (field)
+    {
+      if (TREE_CODE (type) == UNION_TYPE)
+      {
+        tree union_field = field;
+        tree union_type = TREE_TYPE (union_field);
+        tree next_union_type;
+        do
+        {
+          union_field = TREE_CHAIN (union_field);
+          if (!union_field)
+            break;
+          /* Skip all non field decls */
+          if (TREE_CODE (TREE_TYPE (union_field)) == ARRAY_TYPE)
+            next_union_type = get_inner_array_type (union_field);
+          else
+            next_union_type = TREE_TYPE (union_field);
+          if (TYPE_ALIGN (next_union_type) > TYPE_ALIGN (union_type))
+            union_type = next_union_type;
+        } while (1);
+        type = union_type;
+      }
+      else
+        type = TREE_TYPE (field);
+      while (TREE_CODE (type) == ARRAY_TYPE)
+        type = TREE_TYPE (type);
+    }
+  }
+  /* APPLE LOCAL end radar 4869885 */
+
+  /* APPLE LOCAL begin Macintosh alignment 2002-1-22 --ff */
+  if (OPTION_ALIGN_MAC68K)
+    align = MAX (align, 16);
+  /* APPLE LOCAL end Macintosh alignment 2002-1-22 --ff */
+
+  /* APPLE LOCAL begin radar 4869885 */
+  else if (type != error_mark_node && ! TYPE_PACKED (type) &&
+           maximum_field_alignment == 0 && (TARGET_ALIGN_NATURAL == 0))
+  /* APPLE LOCAL end radar 4869885 */
+    align = MAX (align, TYPE_ALIGN (type));
+
+  return align;
+}
+/* APPLE LOCAL end mainline 2006-10-31 PR 23067, radar 4869885 */
 /* Return 1 for an operand in small memory on V.4/eabi.  */
 
 int
@@ -3187,10 +3329,13 @@ rs6000_legitimate_offset_address_p (enum machine_mode mode, rtx x, int strict)
     case V8HImode:
     case V4SFmode:
     case V4SImode:
+      /* APPLE LOCAL begin radar 4994150 */
       /* AltiVec vector modes.  Only reg+reg addressing is valid and
 	 constant offset zero should not occur due to canonicalization.
-	 Allow any offset when not strict before reload.  */
-      return !strict;
+	 Allow any offset when not strict before reload.
+      */
+      return false;
+      /* APPLE LOCAL end radar 4994150 */
 
     case V4HImode:
     case V2SImode:
@@ -5030,6 +5175,14 @@ rs6000_darwin64_record_arg_advance_flush (CUMULATIVE_ARGS *cum,
   endbit = (bitpos + BITS_PER_WORD - 1) & -BITS_PER_WORD;
   intregs = (endbit - startbit) / BITS_PER_WORD;
   cum->words += intregs;
+  /* APPLE LOCAL begin ppc64 abi */
+  /* words should be unsigned. */
+  if ((unsigned)cum->words < (endbit/BITS_PER_WORD))
+    {
+      int pad = (endbit/BITS_PER_WORD) - cum->words;
+      cum->words += pad;
+    }
+  /* APPLE LOCAL end ppc64 abi */
 }
 
 /* The darwin64 ABI calls for us to recurse down through structs,
@@ -6672,7 +6825,7 @@ enum pim_flags
 struct altivec_pim_info GTY(())
 {
   tree rettype;	/* Return type (unless pim_rt_... flags are used).  */
-  int insn;	/* FUNCTION_DECL_CODE of the underlying '__builtin_...'.  */
+  int insn;	/* DECL_FUNCTION_CODE of the underlying '__builtin_...'.  */
   enum pim_flags flags;		/* See 'enum pim_flags' above.  */
 };
 
@@ -7430,7 +7583,10 @@ static struct altivec_pim_info *
 altivec_ovl_resolve (struct altivec_pim_info *info, tree t1, tree t2)
 {
   /* Make sure we have all the types that we need.  */
-  if (!t1 || (!t2 && (info->flags & pim_ovl_MASK) >= pim_ovl_16u_16u))
+  if (!t1)
+    return 0;
+
+  if (!t2 && (info->flags & pim_ovl_MASK) >= pim_ovl_16u_16u)
     return 0;
 
   /* Examine overload candidates in order, and return the first one
@@ -7518,7 +7674,7 @@ static tree
 altivec_convert_args (tree types, tree args)
 {
   tree t, a;
-
+  
   for (t = types, a = args; t && a; t = TREE_CHAIN (t), a = TREE_CHAIN (a))
     {
       TREE_VALUE (a) = convert (TREE_VALUE (t), TREE_VALUE (a));
@@ -7532,21 +7688,31 @@ altivec_convert_args (tree types, tree args)
 	}
     }
 
+  /* At this point we've converted all of the arguments we're supposed
+     to have. Anything extra is an error and we should mark it as such.  */
+  for (a = args; a; a = TREE_CHAIN (a))
+    {
+      if (VOID_TYPE_P (TREE_TYPE (TREE_VALUE (a))))
+	{
+	  error ("Too many arguments to altivec builtin.");
+	  TREE_VALUE (a) = error_mark_node;
+	}
+    }
+  
   return args;
 }
 
-/* The following function rewrites EXP by substituting AltiVec PIM operations
-   or predicates with built-in instructions defined above.  Type casts are
-   provided if needed.  */
+/* The following function rewrites FNDECL and ARGLIST by substituting AltiVec
+   PIM operations or predicates with built-in instructions defined above.
+   Type casts are provided if needed.  */
 
 tree
-/* MERGE FIXME arglist added to build_builtin, ensure it was done correctly
-   also fndecl was exp and used to do fndecl = get_callee_fndecl (exp); */
 rs6000_fold_builtin (tree fndecl, tree arglist, bool ARG_UNUSED (ignore))
 {
   tree rettype;
   tree typ1 = NULL_TREE, typ2 = NULL_TREE;
-  int fcode, ovl_error = 0;
+  int ovl_error = 0;
+  enum built_in_function fcode;
   struct altivec_pim_info *info;
 
   /* Bail out if not in Apple AltiVec mode.  */
@@ -7564,27 +7730,31 @@ rs6000_fold_builtin (tree fndecl, tree arglist, bool ARG_UNUSED (ignore))
   /* Point at the first (and possibly only) entry in ALTIVEC_PIM_TABLE
      describing this PIM operation/predicate, and how to convert it to
      a __builtin_... call.  */
-
+  
   info = altivec_pim_table + (fcode - ALTIVEC_PIM__FIRST);
-
+  
   if (arglist)
-  /* APPLE LOCAL begin radar 5021057 */
-  {
-    if (TREE_VALUE (arglist) == error_mark_node)
-      return NULL_TREE;
-    typ1 = TYPE_MAIN_VARIANT (TREE_TYPE (TREE_VALUE (arglist)));
-  }
+    /* APPLE LOCAL begin radar 5021057 */
+    {
+      if (TREE_VALUE (arglist) == error_mark_node)
+	return NULL_TREE;
+      typ1 = TYPE_MAIN_VARIANT (TREE_TYPE (TREE_VALUE (arglist)));
+    }
   /* APPLE LOCAL end radar 5021057 */
-
+  
   if (arglist && TREE_CHAIN (arglist))
-    typ2 = TYPE_MAIN_VARIANT (TREE_TYPE (TREE_VALUE (TREE_CHAIN (arglist))));
-
+    {
+      if (TREE_VALUE (TREE_CHAIN (arglist)) == error_mark_node)
+	return NULL_TREE;
+      typ2 = TYPE_MAIN_VARIANT (TREE_TYPE (TREE_VALUE (TREE_CHAIN (arglist))));
+    }
+  
   /* Select from a list of overloaded functions, if needed.  */
-
+  
   if (info->flags & pim_ovl_MASK)
     {
       info = altivec_ovl_resolve (info, typ1, typ2);
-
+      
       if (!info)
 	{
 	  /* No suitable overload candidate was found!  */
@@ -7761,10 +7931,22 @@ static rtx
 altivec_expand_abs_builtin (enum insn_code icode, tree arglist, rtx target)
 {
   rtx pat, scratch1, scratch2;
-  tree arg0 = TREE_VALUE (arglist);
-  rtx op0 = expand_normal (arg0);
-  enum machine_mode tmode = insn_data[icode].operand[0].mode;
-  enum machine_mode mode0 = insn_data[icode].operand[1].mode;
+  /* APPLE LOCAL begin Alitvec radar 5447227 */
+  tree arg0;
+  rtx op0;
+  enum machine_mode tmode;
+  enum machine_mode mode0;
+  if (!arglist
+      || !TREE_VALUE (arglist))
+    {
+      error ("too few arguments to function");
+      return const0_rtx;
+    }
+  arg0 = TREE_VALUE (arglist);
+  op0 = expand_normal (arg0);
+  tmode = insn_data[icode].operand[0].mode;
+  mode0 = insn_data[icode].operand[1].mode;
+  /* APPLE LOCAL end Alitvec radar 5447227 */
 
   /* If we have invalid arguments, bail out before generating bad rtl.  */
   if (arg0 == error_mark_node)
@@ -7885,15 +8067,35 @@ altivec_expand_predicate_builtin (enum insn_code icode, const char *opcode,
 				  tree arglist, rtx target)
 {
   rtx pat, scratch;
-  tree cr6_form = TREE_VALUE (arglist);
-  tree arg0 = TREE_VALUE (TREE_CHAIN (arglist));
-  tree arg1 = TREE_VALUE (TREE_CHAIN (TREE_CHAIN (arglist)));
-  rtx op0 = expand_normal (arg0);
-  rtx op1 = expand_normal (arg1);
-  enum machine_mode tmode = SImode;
-  enum machine_mode mode0 = insn_data[icode].operand[1].mode;
-  enum machine_mode mode1 = insn_data[icode].operand[2].mode;
+  /* APPLE LOCAL begin Alitvec radar 5447227 */
+  tree cr6_form;
+  tree arg0;
+  tree arg1;
+  rtx op0;
+  rtx op1;
+  enum machine_mode tmode;
+  enum machine_mode mode0;
+  enum machine_mode mode1;
   int cr6_form_int;
+  if (!arglist
+      || !TREE_VALUE (arglist)
+      || !TREE_CHAIN (arglist)
+      || !TREE_VALUE (TREE_CHAIN (arglist))
+      || !TREE_CHAIN (TREE_CHAIN (arglist))
+      || !TREE_VALUE (TREE_CHAIN (TREE_CHAIN (arglist))))
+    {
+      error ("too few arguments to function");
+      return const0_rtx;
+    }
+  cr6_form = TREE_VALUE (arglist);
+  arg0 = TREE_VALUE (TREE_CHAIN (arglist));
+  arg1 = TREE_VALUE (TREE_CHAIN (TREE_CHAIN (arglist)));
+  op0 = expand_normal (arg0);
+  op1 = expand_normal (arg1);
+  tmode = SImode;
+  mode0 = insn_data[icode].operand[1].mode;
+  mode1 = insn_data[icode].operand[2].mode;
+  /* APPLE LOCAL end Alitvec radar 5447227 */
 
   if (TREE_CODE (cr6_form) != INTEGER_CST)
     {
@@ -7961,13 +8163,30 @@ static rtx
 altivec_expand_lv_builtin (enum insn_code icode, tree arglist, rtx target)
 {
   rtx pat, addr;
-  tree arg0 = TREE_VALUE (arglist);
-  tree arg1 = TREE_VALUE (TREE_CHAIN (arglist));
-  enum machine_mode tmode = insn_data[icode].operand[0].mode;
-  enum machine_mode mode0 = Pmode;
-  enum machine_mode mode1 = Pmode;
-  rtx op0 = expand_normal (arg0);
-  rtx op1 = expand_normal (arg1);
+  /* APPLE LOCAL begin Alitvec radar 5447227 */
+  tree arg0;
+  tree arg1;
+  enum machine_mode tmode;
+  enum machine_mode mode0;
+  enum machine_mode mode1;
+  rtx op0;
+  rtx op1;
+  if (!arglist
+      || !TREE_VALUE (arglist)
+      || !TREE_CHAIN (arglist)
+      || !TREE_VALUE (TREE_CHAIN (arglist)))
+    {
+      error ("too few arguments to function");
+      return const0_rtx;
+    }
+  arg0 = TREE_VALUE (arglist);
+  arg1 = TREE_VALUE (TREE_CHAIN (arglist));
+  tmode = insn_data[icode].operand[0].mode;
+  mode0 = Pmode;
+  mode1 = Pmode;
+  op0 = expand_normal (arg0);
+  op1 = expand_normal (arg1);
+  /* APPLE LOCAL end Alitvec radar 5447227 */
 
   if (icode == CODE_FOR_nothing)
     /* Builtin not supported on this processor.  */
@@ -8039,16 +8258,37 @@ spe_expand_stv_builtin (enum insn_code icode, tree arglist)
 static rtx
 altivec_expand_stv_builtin (enum insn_code icode, tree arglist)
 {
-  tree arg0 = TREE_VALUE (arglist);
-  tree arg1 = TREE_VALUE (TREE_CHAIN (arglist));
-  tree arg2 = TREE_VALUE (TREE_CHAIN (TREE_CHAIN (arglist)));
-  rtx op0 = expand_normal (arg0);
-  rtx op1 = expand_normal (arg1);
-  rtx op2 = expand_normal (arg2);
+  /* APPLE LOCAL begin Alitvec radar 5447227 */
+  tree arg0;
+  tree arg1;
+  tree arg2;
+  rtx op0;
+  rtx op1;
+  rtx op2;
   rtx pat, addr;
-  enum machine_mode tmode = insn_data[icode].operand[0].mode;
-  enum machine_mode mode1 = Pmode;
-  enum machine_mode mode2 = Pmode;
+  enum machine_mode tmode;
+  enum machine_mode mode1;
+  enum machine_mode mode2;
+  if (!arglist
+      || !TREE_VALUE (arglist)
+      || !TREE_CHAIN (arglist)
+      || !TREE_VALUE (TREE_CHAIN (arglist))
+      || !TREE_CHAIN (TREE_CHAIN (arglist))
+      || !TREE_VALUE (TREE_CHAIN (TREE_CHAIN (arglist))))
+    {
+      error ("too few arguments to function");
+      return const0_rtx;
+    }
+  arg0 = TREE_VALUE (arglist);
+  arg1 = TREE_VALUE (TREE_CHAIN (arglist));
+  arg2 = TREE_VALUE (TREE_CHAIN (TREE_CHAIN (arglist)));
+  op0 = expand_normal (arg0);
+  op1 = expand_normal (arg1);
+  op2 = expand_normal (arg2);
+  tmode = insn_data[icode].operand[0].mode;
+  mode1 = Pmode;
+  mode2 = Pmode;
+  /* APPLE LOCAL end Alitvec radar 5447227 */
 
   /* Invalid arguments.  Bail before doing anything stoopid!  */
   if (arg0 == error_mark_node
@@ -8187,6 +8427,14 @@ altivec_expand_ld_builtin (tree exp, rtx target, bool *expandedp)
 
   *expandedp = true;
 
+  /* APPLE LOCAL begin Alitvec radar 5447227 */
+  if (!arglist
+      || !TREE_VALUE (arglist))
+    {
+      error ("too few arguments to function");
+      return const0_rtx;
+    }
+  /* APPLE LOCAL end Alitvec radar 5447227 */
   arg0 = TREE_VALUE (arglist);
   op0 = expand_normal (arg0);
   tmode = insn_data[icode].operand[0].mode;
@@ -8239,6 +8487,16 @@ altivec_expand_st_builtin (tree exp, rtx target ATTRIBUTE_UNUSED,
       return NULL_RTX;
     }
 
+  /* APPLE LOCAL begin Alitvec radar 5447227 */
+  if (!arglist
+      || !TREE_VALUE (arglist)
+      || !TREE_CHAIN (arglist)
+      || !TREE_VALUE (TREE_CHAIN (arglist)))
+    {
+      error ("too few arguments to function");
+      return const0_rtx;
+    }
+  /* APPLE LOCAL end Alitvec radar 5447227 */
   arg0 = TREE_VALUE (arglist);
   arg1 = TREE_VALUE (TREE_CHAIN (arglist));
   op0 = expand_normal (arg0);
@@ -8280,6 +8538,18 @@ altivec_expand_dst_builtin (tree exp, rtx target ATTRIBUTE_UNUSED,
   for (i = 0; i < ARRAY_SIZE (bdesc_dst); i++, d++)
     if (d->code == fcode)
       {
+        /* APPLE LOCAL begin Alitvec radar 5447227 */
+        if (!arglist
+          || !TREE_VALUE (arglist)
+          || !TREE_CHAIN (arglist)
+          || !TREE_VALUE (TREE_CHAIN (arglist))
+          || !TREE_CHAIN (TREE_CHAIN (arglist))
+          || !TREE_VALUE (TREE_CHAIN (TREE_CHAIN (arglist))))
+        {
+          error ("too few arguments to function");
+          return const0_rtx;
+        }
+        /* APPLE LOCAL end Alitvec radar 5447227 */
 	arg0 = TREE_VALUE (arglist);
 	arg1 = TREE_VALUE (TREE_CHAIN (arglist));
 	arg2 = TREE_VALUE (TREE_CHAIN (TREE_CHAIN (arglist)));
@@ -12579,7 +12849,10 @@ print_operand (FILE *file, rtx x, int code)
 	{
 	  const char *name = XSTR (x, 0);
 #if TARGET_MACHO
-	  if (MACHOPIC_INDIRECT
+	  /* APPLE LOCAL begin axe stubs 5571540 */
+	  if (darwin_stubs
+	      && MACHOPIC_INDIRECT
+	  /* APPLE LOCAL end axe stubs 5571540 */
 	      && machopic_classify_symbol (x) == MACHOPIC_UNDEFINED_FUNCTION)
 	    name = machopic_indirection_name (x, /*stub_p=*/true);
 #endif
@@ -20279,13 +20552,9 @@ get_prev_label (tree function_name)
   return 0;
 }
 
-#ifndef DARWIN_LINKER_GENERATES_ISLANDS
-#define DARWIN_LINKER_GENERATES_ISLANDS 0
-#endif
-
-/* KEXTs still need branch islands.  */
-#define DARWIN_GENERATE_ISLANDS (!DARWIN_LINKER_GENERATES_ISLANDS \
-				 || flag_mkernel || flag_apple_kext)
+/* APPLE LOCAL begin axe stubs 5571540 */
+/* DARWIN_LINKER_GENERATES_ISLANDS and DARWIN_GENERATE_ISLANDS moved up */
+/* APPLE LOCAL end axe stubs 5571540 */
 
 /* INSN is either a function call or a millicode call.  It may have an
    unconditional jump in its delay slot.
@@ -20540,133 +20809,6 @@ rs6000_darwin_file_start (void)
 }
 
 #endif /* TARGET_MACHO */
-
-/* APPLE LOCAL begin Macintosh alignment 2002-1-22 --ff */
-/* Return the alignment of a struct based on the Macintosh PowerPC
-   alignment rules.  In general the alignment of a struct is
-   determined by the greatest alignment of its elements.  However, the
-   PowerPC rules cause the alignment of a struct to peg at word
-   alignment except when the first field has greater than word
-   (32-bit) alignment, in which case the alignment is determined by
-   the alignment of the first field.  */
-
-unsigned
-round_type_align (tree the_struct, unsigned computed, unsigned specified)
-{
-  if (TREE_CODE (the_struct) == VECTOR_TYPE
-      && ALTIVEC_VECTOR_MODE (TYPE_MODE (the_struct)))
-    {
-      /* All vectors are (at least) 16-byte aligned.  A struct or
-	 union with a vector element is also 16-byte aligned.  */
-      return MAX (RS6000_VECTOR_ALIGNMENT, MAX (computed, specified));
-    }
-
-  if (TREE_CODE (the_struct) == RECORD_TYPE
-      || TREE_CODE (the_struct) == UNION_TYPE
-      || TREE_CODE (the_struct) == QUAL_UNION_TYPE)
-    {
-      tree first_field = TYPE_FIELDS (the_struct);
-
-      /* Skip past static fields, enums, and constant fields that are
-         not really a part of the record layout.  */
-      while ((first_field != 0)
-             && (TREE_CODE (first_field) != FIELD_DECL))
-	first_field = TREE_CHAIN (first_field);
-
-      if (first_field != 0)
-        {
-	  /* If other-than-default alignment (which includes mac68k
-	     mode) is in effect, then no adjustments to the alignment
-	     should be necessary.  Ditto if the struct has the
-	     __packed__ attribute.  */
-	  if (TYPE_PACKED (the_struct) || OPTION_ALIGN_MAC68K
-	      || TARGET_ALIGN_NATURAL || maximum_field_alignment != 0)
-	    /* Do nothing  */ ;
-	  else
-            {
-              /* The following code handles Macintosh PowerPC
-                 alignment.  The implementation is complicated by the
-                 fact that BIGGEST_ALIGNMENT is 128 when AltiVec is
-                 enabled and 32 when it is not.  So when AltiVec is
-                 not enabled, alignment is generally limited to word
-                 alignment.  Consequently, the alignment of unions has
-                 to be recalculated if AltiVec is not enabled.
-
-                 Below we explicitly test for fields with greater than
-                 word alignment: doubles, long longs, and structs and
-                 arrays with greater than word alignment.  */
-              unsigned val;
-              tree field_type;
-
-              val = MAX (computed, specified);
-
-              if (TREE_CODE (the_struct) == UNION_TYPE && !TARGET_ALTIVEC)
-                {
-                  tree field = first_field;
-
-                  while (field != 0)
-                    {
-                      /* Don't consider statics, enums and constant fields
-                         which are not really a part of the record.  */
-                      if (TREE_CODE (field) != FIELD_DECL)
-                        {
-                          field = TREE_CHAIN (field);
-                          continue;
-                        }
-                      field_type = TREE_TYPE(field);
-                      if (TREE_CODE (TREE_TYPE (field)) == ARRAY_TYPE)
-                        field_type = get_inner_array_type (field);
-                      else
-                        field_type = TREE_TYPE (field);
-		      if (field_type != error_mark_node)
-			{
-			  val = MAX (TYPE_ALIGN (field_type), val);
-			  if (FLOAT_TYPE_P (field_type)
-			      && TYPE_MODE (field_type) == DFmode)
-			    val = MAX (RS6000_DOUBLE_ALIGNMENT, val);
-			  else if (INTEGRAL_TYPE_P (field_type)
-				   && TYPE_MODE (field_type) == DImode)
-			    val = MAX (RS6000_LONGLONG_ALIGNMENT, val);
-			}
-                      field = TREE_CHAIN (field);
-                    }
-                }
-              else
-                {
-                  if (TREE_CODE (TREE_TYPE (first_field)) == ARRAY_TYPE)
-                    field_type = get_inner_array_type (first_field);
-                  else
-                    field_type = TREE_TYPE (first_field);
-
-		  if (field_type == error_mark_node)
-		    return val;
-                  val = MAX (TYPE_ALIGN (field_type), val);
-
-                  if (FLOAT_TYPE_P (field_type)
-				&& TYPE_MODE (field_type) == DFmode)
-                    val = MAX (RS6000_DOUBLE_ALIGNMENT, val);
-                  else if (INTEGRAL_TYPE_P (field_type)
-				&& TYPE_MODE (field_type) == DImode)
-                    val = MAX (RS6000_LONGLONG_ALIGNMENT, val);
-                }
-
-	      return val;
-            }
-        }					/* first_field != 0  */
-
-      /* Ensure all MAC68K structs are at least 16-bit aligned.
-	 Unless the struct has __attribute__ ((packed)).  */
-
-      if (OPTION_ALIGN_MAC68K && ! TYPE_PACKED (the_struct))
-	{
-	  if (computed < 16)
-	    computed = 16;
-	}
-    }						/* RECORD_TYPE, etc  */
-
-  return (MAX (computed, specified));
-}
-/* APPLE LOCAL end Macintosh alignment 2002-1-22 --ff */
 
 #if TARGET_ELF
 static int
@@ -22002,5 +22144,60 @@ rs6000_stack_protect_fail (void)
 	 ? default_hidden_stack_protect_fail ()
 	 : default_external_stack_protect_fail ();
 }
+
+/* APPLE LOCAL begin 3399553 */
+/* Calculate the value of FLT_ROUNDS into DEST.
+
+   The rounding mode is in bits 30:31 of FPSCR, and has the following
+   settings:
+     00 Round to nearest
+     01 Round to 0
+     10 Round to +inf
+     11 Round to -inf
+
+  FLT_ROUNDS, on the other hand, expects the following:
+    -1 Undefined
+     0 Round to 0
+     1 Round to nearest
+     2 Round to +inf
+     3 Round to -inf
+
+  To perform the conversion, we do: 
+    ((FPSCR & 0x3) ^ ((~FPSCR & 0x3) >> 1))
+*/
+extern void
+rs6000_expand_flt_rounds (rtx dest)
+{
+  if (TARGET_HARD_FLOAT && TARGET_FPRS)
+    {
+      rtx mem = assign_stack_temp (DFmode, GET_MODE_SIZE (DFmode), 0);
+      rtx temp_fp = gen_reg_rtx (DFmode);
+      rtx temp_int = gen_reg_rtx (SImode);
+
+      /* Step #1: Read FPSCR.  Unfortunately, this can only be done into
+	 bits 32:63 of a FP reg.  */
+      emit_insn (gen_mffs (temp_fp));
+
+      /* Step #2: Copy onto a stack temp.  */
+      emit_move_insn (mem, temp_fp);
+
+      /* Step #3: Copy into an integer register.  */
+      emit_move_insn (dest, adjust_address (mem, SImode,
+					    WORDS_BIG_ENDIAN ? 4 : 0));
+
+      /* Step #4: Perform conversion described above.  */
+      emit_insn (gen_one_cmplsi2 (temp_int, dest));
+      emit_insn (gen_andsi3 (dest, dest, GEN_INT (0x3)));
+      emit_insn (gen_andsi3 (temp_int, temp_int, GEN_INT (0x3)));
+      emit_insn (gen_lshrsi3 (temp_int, temp_int, const1_rtx));
+      emit_insn (gen_xorsi3 (dest, dest, temp_int));
+    }
+  else
+    {
+      /* Default: return 1 (round to nearest).  */
+      emit_move_insn (dest, const1_rtx);
+    }
+}
+/* APPLE LOCAL end 3399553 */
 
 #include "gt-rs6000.h"

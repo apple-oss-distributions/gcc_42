@@ -1334,7 +1334,10 @@ dbxout_start_source_file (unsigned int line ATTRIBUTE_UNUSED,
      Delay it until we actually emit BINCL.  */
   n->file_number = 0;
   n->prev = NULL;
-  current_file->prev = n;
+  /* APPLE LOCAL begin bincl 4549901 */
+  if (current_file)
+    current_file->prev = n;
+  /* APPLE LOCAL end bincl 4549901 */
   n->bincl_status = BINCL_PENDING;
   n->pending_bincl_name = filename;
   pending_bincls = 1;
@@ -1362,6 +1365,10 @@ dbxout_end_source_file (unsigned int line ATTRIBUTE_UNUSED)
     }
   current_file->bincl_status = BINCL_NOT_REQUIRED;
   current_file = current_file->next;
+  /* APPLE LOCAL begin bincl 4549901 */
+  if (current_file == 0)
+    pending_bincls = 0;
+  /* APPLE LOCAL end bincl 4549901 */
 #endif
 }
 
@@ -2660,7 +2667,11 @@ dbxout_type_xref (tree type)
       gcc_unreachable ();
     }
 
-  if (TYPE_NAME (type) != 0)
+  /* APPLE LOCAL begin 5597292 */
+  if (TYPE_NAME (type) != 0
+      && (TREE_CODE (TYPE_NAME (type)) != TYPE_DECL
+	  || DECL_NAME (TYPE_NAME (type)) != 0))
+  /* APPLE LOCAL end 5597292 */
     dbxout_type_name (type);
   else
     {
@@ -4001,6 +4012,13 @@ dbxout_parms (tree parms)
 	      number = INTVAL (XEXP (XEXP (DECL_RTL (parms), 0), 1));
 	    else
 	      number = 0;
+
+	    /* APPLE LOCAL begin ARM prefer SP to FP */
+	    /* I'm not sure why this wasn't here in the first place --
+	       we surely need it.  */
+	    number = DEBUGGER_ARG_OFFSET (number,
+					  XEXP (DECL_RTL (parms), 0));
+	    /* APPLE LOCAL end ARM prefer SP to FP */
 
 	    /* Make a big endian correction if the mode of the type of the
 	       parameter is not the same as the mode of the rtl.  */

@@ -443,7 +443,7 @@ static void darwin_set_flags_from_pragma (void)
 {
   set_flags_from_O (false);
 
-  /* MERGE FIXME - flag_loop_optimize2 is gone now */
+  /* MERGE FIXME 5416402 flag_loop_optimize2 is gone now */
 #if 0
   /* Enable new loop optimizer pass if any of its optimizations is called.  */
   if (flag_move_loop_invariants
@@ -930,7 +930,8 @@ find_subframework_header (cpp_reader *pfile, const char *header, cpp_dir **dirp)
    so '10.4.2' becomes 1042.
    Print a warning if the version number is not known.  */
 static const char *
-version_as_macro (void)
+/* APPLE LOCAL ARM 5683689 */
+macosx_version_as_macro (void)
 {
   static char result[] = "1000";
 
@@ -960,6 +961,81 @@ version_as_macro (void)
   return "1000";
 }
 
+/* APPLE LOCAL begin ARM 5683689 */
+/* Return the value of darwin_aspen_version_min suitable for the
+   __ENVIRONMENT_ASPEN_VERSION_MIN_REQUIRED__ macro.  Unlike the
+   __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ macros, minor version
+   numbers are left-zero-padded.  e.g., '1.2.3' becomes 10203.
+   The last/third version number (patch level?) is optional, and
+   defaults to '00' if not specified.  In the case of a parse error,
+   print a warning and return 10200.  */
+static const char *
+aspen_version_as_macro (void)
+{
+  static char result[sizeof ("99.99.99") + 1];
+  const char *src_ptr = darwin_aspen_version_min;
+  char *result_ptr = &result[0];
+
+  if (! darwin_aspen_version_min)
+    goto fail;
+
+  if (! ISDIGIT (*src_ptr))
+    goto fail;
+
+  /* Copy over the major version number.  */
+  *result_ptr++ = *src_ptr++;
+
+  if (ISDIGIT (*src_ptr))
+    *result_ptr++ = *src_ptr++;
+
+  if (*src_ptr != '.')
+    goto fail;
+
+  src_ptr++;
+
+  /* Start parsing the minor version number.  */
+  if (! ISDIGIT (*src_ptr))
+    goto fail;
+
+  /* Zero-pad a single-digit value, or copy a two-digit value.  */
+  *result_ptr++ = ISDIGIT (*(src_ptr + 1)) ? *src_ptr++ : '0';
+  *result_ptr++ = *src_ptr++;
+
+  /* Parse the third version number (patch level?)  */
+  if (*src_ptr == '\0')
+    {
+      /* Not present -- default to zeroes.  */
+      *result_ptr++ = '0';
+      *result_ptr++ = '0';
+    }
+  else if (*src_ptr == '.')
+    {
+      src_ptr++;
+
+      if (! ISDIGIT (*src_ptr))
+	goto fail;
+
+      /* Zero-pad a single-digit value, or copy a two-digit value.  */
+      *result_ptr++ = ISDIGIT (*(src_ptr + 1)) ? *src_ptr++ : '0';
+      *result_ptr++ = *src_ptr++;
+    }
+  else
+    goto fail;
+
+  /* Verify and copy the terminating NULL.  */
+  if (*src_ptr != '\0')
+    goto fail;
+ 
+  *result_ptr++ = '\0'; 
+  return result;
+  
+ fail:
+  error ("Unknown value %qs of -maspen-version-min",
+	 darwin_aspen_version_min);
+  return "10200";
+}
+/* APPLE LOCAL end ARM 5683689 */
+
 /* Define additional CPP flags for Darwin.   */
 
 #define builtin_define(TXT) cpp_define (pfile, TXT)
@@ -973,10 +1049,14 @@ darwin_cpp_builtins (cpp_reader *pfile)
   /* APPLE LOCAL Apple version */
   /* Don't define __APPLE_CC__ here.  */
 
-  /* APPLE LOCAL begin mainline 2007-02-20 5005743 */
-  builtin_define_with_value ("__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__",
-			     version_as_macro(), false);
-  /* APPLE LOCAL end mainline 2007-02-20 5005743 */
+  /* APPLE LOCAL begin ARM 5683689 */
+  if (darwin_macosx_version_min)
+    builtin_define_with_value ("__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__",
+			       macosx_version_as_macro(), false);
+  else
+    builtin_define_with_value ("__ENVIRONMENT_ASPEN_VERSION_MIN_REQUIRED__",
+			       aspen_version_as_macro(), false);
+  /* APPLE LOCAL end ARM 5683689 */
 
   /* APPLE LOCAL begin constant cfstrings */
   if (darwin_constant_cfstrings)
@@ -1011,9 +1091,9 @@ darwin_cpp_builtins (cpp_reader *pfile)
   /* APPLE LOCAL radar 4899595 */
   builtin_define ("OBJC_NEW_PROPERTIES");
   /* APPLE LOCAL end radar 5072864 */
+/* APPLE LOCAL begin confused diff */
 }
-/* APPLE LOCAL confused diff */
-
+/* APPLE LOCAL end confused diff */
 /* APPLE LOCAL begin iframework for 4.3 4094959 */
 bool
 darwin_handle_c_option (size_t code, const char *arg, int value ATTRIBUTE_UNUSED)

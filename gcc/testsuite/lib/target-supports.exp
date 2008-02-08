@@ -336,7 +336,9 @@ proc check_profiling_available { test_what } {
     if {![info exists profiling_available_saved]} {
 	# Some targets don't have any implementation of __bb_init_func or are
 	# missing other needed machinery.
+	# APPLE LOCAL begin ARM no profiling support
 	if { [istarget mmix-*-*]
+	     || [istarget arm*-*-darwin*]
 	     || [istarget arm*-*-eabi*]
 	     || [istarget arm*-*-elf]
 	     || [istarget arm*-*-symbianelf*]
@@ -354,6 +356,7 @@ proc check_profiling_available { test_what } {
 	} else {
 	    set profiling_available_saved 1
 	}
+	# APPLE LOCAL end ARM no profiling support
     }
 
     return $profiling_available_saved
@@ -1715,6 +1718,29 @@ proc check_effective_target_vect_no_align { } {
     verbose "check_effective_target_vect_no_align: returning $et_vect_no_align_saved" 2
     return $et_vect_no_align_saved
 }
+
+# APPLE LOCAL begin mainline 4.2 5569774
+# Return 1 if arrays are naturally aligned to the vector
+# alignment boundary, 0 otherwise.
+#
+# This won't change for different subtargets so cache the result.
+
+proc check_effective_target_vect_aligned_arrays { } {
+    global et_vect_aligned_arrays
+
+    if [info exists et_vect_aligned_arrays_saved] {
+	verbose "check_effective_target_vect_aligned_arrays: using cached result" 2
+    } else {
+	set et_vect_aligned_arrays_saved 0
+	if { ([istarget x86_64-*-*]
+	      || [istarget i?86-*-*]) && [is-effective-target lp64] } {
+	    set et_vect_aligned_arrays_saved 1
+	}
+    }
+    verbose "check_effective_target_vect_aligned_arrays: returning $et_vect_aligned_arrays_saved" 2
+    return $et_vect_aligned_arrays_saved
+}
+# APPLE LOCAL end mainline 4.2 5569774
 
 # Return 1 if the target supports vector conditional operations, 0 otherwise.
 

@@ -7061,7 +7061,7 @@ cp_parser_compound_statement (cp_parser *parser, tree in_statement_expr,
       iasm_in_decl = false;
       iasm_state = iasm_asm;
       inside_iasm_block = true;
-      iasm_clear_labels ();
+      iasm_kill_regs = true;
       cp_parser_iasm_line_seq_opt (parser);
       iasm_state = iasm_none;
       iasm_end_block ();
@@ -11841,12 +11841,14 @@ cp_parser_asm_definition (cp_parser* parser, bool statement_p ATTRIBUTE_UNUSED)
 	error ("asm blocks not enabled, use `-fasm-blocks'");
       return;
     }
-  if (cp_lexer_next_token_is (parser->lexer, CPP_DOT)
-      || cp_lexer_next_token_is (parser->lexer, CPP_ATSIGN)
-      || cp_lexer_next_token_is (parser->lexer, CPP_NAME)
-      || cp_lexer_next_token_is_keyword (parser->lexer, RID_ASM)
-      || cp_lexer_next_token_is (parser->lexer, CPP_SEMICOLON)
-      || cp_lexer_iasm_bol (parser->lexer))
+  if (! volatile_p
+      && (cp_lexer_next_token_is (parser->lexer, CPP_DOT)
+	  || cp_lexer_next_token_is (parser->lexer, CPP_ATSIGN)
+	  || cp_lexer_next_token_is (parser->lexer, CPP_NAME)
+	  || cp_lexer_next_token_is_keyword (parser->lexer, RID_ASM)
+	  || cp_lexer_next_token_is (parser->lexer, CPP_SEMICOLON)
+	  || (cp_lexer_iasm_bol (parser->lexer)
+	      && ! cp_lexer_next_token_is (parser->lexer, CPP_OPEN_PAREN))))
     {
       if (flag_iasm_blocks)
 	cp_parser_iasm_top_statement (parser);
@@ -17899,7 +17901,7 @@ cp_parser_iasm_compound_statement (cp_parser *parser)
 
   iasm_state = iasm_asm;
   inside_iasm_block = true;
-  iasm_clear_labels ();
+  iasm_kill_regs = true;
   if (!cp_parser_require (parser, CPP_OPEN_BRACE, "`{'"))
     return error_mark_node;
   /* Begin the compound-statement.  */
@@ -17923,7 +17925,7 @@ cp_parser_iasm_top_statement (cp_parser *parser)
 
   iasm_state = iasm_asm;
   inside_iasm_block = true;
-  iasm_clear_labels ();
+  iasm_kill_regs = true;
   /* Begin the compound-statement.  */
   compound_stmt = begin_compound_stmt (/*has_no_scope=*/false);
   if (!cp_lexer_iasm_bol (parser->lexer))
@@ -19798,7 +19800,8 @@ cp_parser_objc_class_ivars (cp_parser* parser)
 /* Parse an Objective-C protocol declaration.  */
 
 static void
-cp_parser_objc_protocol_declaration (cp_parser* parser)
+/* APPLE LOCAL radar 4947311 */
+cp_parser_objc_protocol_declaration (cp_parser* parser, tree attributes)
 {
   tree proto, protorefs;
   cp_token *tok;
@@ -19816,7 +19819,8 @@ cp_parser_objc_protocol_declaration (cp_parser* parser)
   /* Try a forward declaration first.  */
   if (tok->type == CPP_COMMA || tok->type == CPP_SEMICOLON)
     {
-      objc_declare_protocols (cp_parser_objc_identifier_list (parser));
+      /* APPLE LOCAL radar 4947311 */
+      objc_declare_protocols (cp_parser_objc_identifier_list (parser), attributes);
      finish:
       cp_parser_consume_semicolon_at_end_of_statement (parser);
     }
@@ -19826,7 +19830,8 @@ cp_parser_objc_protocol_declaration (cp_parser* parser)
     {
       proto = cp_parser_identifier (parser);
       protorefs = cp_parser_objc_protocol_refs_opt (parser);
-      objc_start_protocol (proto, protorefs);
+      /* APPLE LOCAL radar 4947311 */
+      objc_start_protocol (proto, protorefs, attributes);
       cp_parser_objc_method_prototype_list (parser);
     }
 }
@@ -19863,15 +19868,14 @@ cp_parser_objc_superclass_or_category (cp_parser *parser, tree *super,
 /* Parse an Objective-C class interface.  */
 
 static void
-cp_parser_objc_class_interface (cp_parser* parser)
+/* APPLE LOCAL radar 4947311 */
+cp_parser_objc_class_interface (cp_parser* parser, tree attributes)
 {
   tree name, super, categ, protos;
   /* APPLE LOCAL radar 4965989 */
   bool is_categ;
-  /* APPLE LOCAL begin radar 4548636 */
-  tree attributes = NULL_TREE;
-  cp_parser_objc_maybe_attributes (parser, &attributes);
-  /* APPLE LOCAL end radar 4548636 */
+  /* APPLE LOCAL radar 4947311 */
+  /* Code for radar 4548636 removed. */
   cp_lexer_consume_token (parser->lexer);  /* Eat '@interface'.  */
   name = cp_parser_identifier (parser);
   /* APPLE LOCAL radar 4965989 */
@@ -19909,18 +19913,6 @@ cp_parser_objc_class_implementation (cp_parser* parser)
   /* APPLE LOCAL radar 4965989 */
   bool is_categ;
   cp_lexer_consume_token (parser->lexer);  /* Eat '@implementation'.  */
-  /* APPLE LOCAL begin radar 4533974 - ObjC new protocol */
-  if(cp_lexer_next_token_is (parser->lexer, CPP_LESS))
-    {
-      tree protorefs;
-      cp_lexer_consume_token (parser->lexer);  /* Eat '<'.  */
-      protorefs = cp_parser_objc_identifier_list (parser);
-      cp_parser_require (parser, CPP_GREATER, "`>'");
-      objc_protocol_implementation (protorefs);
-      return;
-    }
-
-  /* APPLE LOCAL end radar 4533974 - ObjC new protocol */
   name = cp_parser_identifier (parser);
   /* APPLE LOCAL radar 4965989 */
   cp_parser_objc_superclass_or_category (parser, &super, &categ, &is_categ);
@@ -19974,12 +19966,24 @@ cp_parser_objc_declaration (cp_parser* parser)
       cp_parser_objc_class_declaration (parser);
       break;
     case RID_AT_PROTOCOL:
-      cp_parser_objc_protocol_declaration (parser);
+      /* APPLE LOCAL radar 4947311 */
+      cp_parser_objc_protocol_declaration (parser, NULL_TREE);
       break;
-    /* APPLE LOCAL radar 4548636 */
+    /* APPLE LOCAL begin radar 4548636 - radar 4947311 */
     case RID_ATTRIBUTE:
+      {
+        tree attributes = NULL_TREE;
+        cp_parser_objc_maybe_attributes (parser, &attributes);
+        if (cp_lexer_peek_token (parser->lexer)->keyword == RID_AT_INTERFACE)
+	  cp_parser_objc_class_interface (parser, attributes);
+        else if (cp_lexer_peek_token (parser->lexer)->keyword == RID_AT_PROTOCOL)
+	  cp_parser_objc_protocol_declaration (parser, attributes);
+        break;
+      }
+    /* APPLE LOCAL end radar 4548636 - radar 4947311 */
     case RID_AT_INTERFACE:
-      cp_parser_objc_class_interface (parser);
+      /* APPLE LOCAL radar 4947311 */
+      cp_parser_objc_class_interface (parser, NULL_TREE);
       break;
     case RID_AT_IMPLEMENTATION:
       cp_parser_objc_class_implementation (parser);

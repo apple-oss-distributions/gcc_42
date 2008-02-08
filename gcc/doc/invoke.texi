@@ -47,8 +47,7 @@ remainder.  @samp{g++} accepts mostly the same options as @samp{gcc}.
 
 @c APPLE LOCAL begin manual
 In Apple's version of GCC, both @samp{cc} and @samp{gcc} are actually
-symbolic links to a compiler named like gcc-@var{version}; which compiler
-is linked to may be changed using the command @samp{gcc_select}.
+symbolic links to a compiler named like gcc-@var{version}.
 Similarly, @samp{c++} and @samp{g++} are links to a compiler named like
 g++-@var{version}.
 
@@ -179,8 +178,10 @@ in the following sections.
 @gccoptlist{-c  -S  -E  -o @var{file}  -combine -pipe  -pass-exit-codes  @gol
 @c APPLE LOCAL -ObjC 2001-08-03 --sts **
 -ObjC (APPLE ONLY) -ObjC++ (APPLE ONLY) @gol
-@c APPLE LOCAL fat builds
+@c APPLE LOCAL begin fat builds
 -arch @var{arch} (APPLE ONLY) @gol
+-Xarch_@var{arch} @var{option} (APPLE ONLY) @gol
+@c APPLE LOCAL end fat builds
 @c APPLE LOCAL ss2
 -fsave-repository=@var{file} @gol
 -x @var{language}  -v  -###  --help  --target-help  --version @@@var{file}}
@@ -206,8 +207,6 @@ in the following sections.
 @c APPLE LOCAL pch distcc --mrs
 -fpch-preprocess (APPLE ONLY) @gol
 -fsigned-bitfields  -fsigned-char @gol
-@c APPLE LOCAL pascal strings
--fpascal-strings (APPLE ONLY) @gol
 @c APPLE LOCAL -Wno-#warnings
 -Wno-#warnings (APPLE ONLY) @gol
 @c APPLE LOCAL -Wextra-tokens 2001-08-02 --sts **
@@ -465,6 +464,8 @@ Objective-C and Objective-C++ Dialects}.
 @gccoptlist{-EB  -EL @gol
 -mmangle-cpu  -mcpu=@var{cpu}  -mtext=@var{text-section} @gol
 -mdata=@var{data-section}  -mrodata=@var{readonly-data-section}}
+@c APPLE LOCAL ARM prune man page
+@end ignore
 
 @emph{ARM Options}
 @gccoptlist{-mapcs-frame  -mno-apcs-frame @gol
@@ -490,6 +491,8 @@ Objective-C and Objective-C++ Dialects}.
 -mcaller-super-interworking  -mcallee-super-interworking @gol
 -mtp=@var{name}}
 
+@c APPLE LOCAL ARM prune man page
+@ignore
 @emph{AVR Options}
 @gccoptlist{-mmcu=@var{mcu}  -msize  -minit-stack=@var{n}  -mno-interrupts @gol
 -mcall-prologues  -mno-tablejump  -mtiny-stack  -mint8}
@@ -541,7 +544,12 @@ Objective-C and Objective-C++ Dialects}.
 -twolevel_namespace  -umbrella  -undefined @gol
 -unexported_symbols_list  -weak_reference_mismatches @gol
 -whatsloaded -F -gused -gfull -mmacosx-version-min=@var{version} @gol
--mkernel -mone-byte-bool}
+@c APPLE LOCAL pascal strings
+-mpascal-strings (APPLE ONLY) @gol
+@c APPLE LOCAL begin fat builds
+-mkernel -mone-byte-bool @gol
+-Xarch_@var{arch}}
+@c APPLE LOCAL end fat builds
 
 @c APPLE LOCAL prune man page
 @ignore
@@ -1069,6 +1077,12 @@ produce ``universal'' binaries including object code for each
 architecture specified with @option{-arch}.  This option only works if
 assembler and libraries are available for each architecture specified.
 (APPLE ONLY)
+
+@item -Xarch_@var{arch} @var{option}
+@opindex Xarch
+Apply @var{option} to the command line for architecture @var{arch}.
+This is useful for specifying an option that should only apply to
+one architecture when building a ``universal'' binary.  (APPLE ONLY)
 @c APPLE LOCAL end fat builds
 
 @c APPLE LOCAL begin ss2
@@ -1610,18 +1624,6 @@ is called on a literal string.  (APPLE ONLY)
 Warn if constant CFString objects contain non-portable characters 
 (default behavior)
 @c APPLE LOCAL end radar 3506309
-
-@c APPLE LOCAL begin pascal strings
-@item -fpascal-strings
-Allow Pascal-style string literals to be constructed.  This option
-implies @option{-Wpointer-sign} so that conversions between
-Pascal-style strings and C-style strings are warned about.  (APPLE
-ONLY)
-
-@xref{Pascal Strings,,Constructing String Literals with a Pascal-style
-Length Byte}, for more information on the syntax and semantics of Pascal
-string literals.
-@c APPLE LOCAL end pascal strings
 
 @c APPLE LOCAL begin fwritable strings. 
 @item -fwritable-strings
@@ -2491,6 +2493,13 @@ Warn if no ``assign'', ``retain'', or ``copy'' attribute is specified on
 a property of pointer to object type. Property is then assumed to be
 ``assign'' by default.
 @c APPLE LOCAL end radar 5172645
+
+@c APPLE LOCAL begin radar 5376125
+@item -Wdirect-ivar-access
+@opindex Wdirect-ivar-access
+Warn if ivar of pointer to object type is directly accessed in non-gc
+mode, instead of using property syntax access.
+@c APPLE LOCAL end radar 5376125
  
 @item -Wstrict-selector-match
 @opindex Wstrict-selector-match
@@ -5575,8 +5584,10 @@ helps machines that have slow floating point or memory load instructions
 by allowing other instructions to be issued until the result of the load
 or floating point instruction is required.
 
-@c APPLE LOCAL 4231761 -Oz
-Enabled at levels @option{-O2}, @option{-O3}, @option{-Os}, @option{-Oz} (APPLE ONLY).
+@c APPLE LOCAL begin 4231761 5591571
+Enabled at levels @option{-O2}, @option{-O3}, @option{-Os}, @option{-Oz} for PPC targets;
+ignored for x86 targets (APPLE ONLY).
+@c APPLE LOCAL end 4231761 5591571
 
 @item -fschedule-insns2
 @opindex fschedule-insns2
@@ -5585,8 +5596,10 @@ instruction scheduling after register allocation has been done.  This is
 especially useful on machines with a relatively small number of
 registers and where memory load instructions take more than one cycle.
 
-@c APPLE LOCAL 4231761 -Oz
-Enabled at levels @option{-O2}, @option{-O3}, @option{-Os}, @option{-Oz} (APPLE ONLY).
+@c APPLE LOCAL begin 4231761 5591571
+Enabled at levels @option{-O2}, @option{-O3}, @option{-Os}, @option{-Oz} for PPC targets;
+ignored for x86 targets (APPLE ONLY).
+@c APPLE LOCAL end 4231761 5591571
 
 @item -fno-sched-interblock
 @opindex fno-sched-interblock
@@ -7996,7 +8009,11 @@ platform.
 @c APPLE LOCAL prune man page
 @ignore
 * ARC Options::
+@c APPLE LOCAL ARM prune man page
+@end ignore
 * ARM Options::
+@c APPLE LOCAL ARM prune man page
+@ignore
 * AVR Options::
 * Blackfin Options::
 * CRIS Options::
@@ -8094,6 +8111,8 @@ by default.  This can be overridden with the @code{section} attribute.
 @xref{Variable Attributes}.
 
 @end table
+@c APPLE LOCAL ARM prune man page
+@end ignore
 
 @node ARM Options
 @subsection ARM Options
@@ -8415,6 +8434,8 @@ best available method for the selected processor.  The default setting is
 
 @end table
 
+@c APPLE LOCAL ARM prune man page
+@ignore
 @node AVR Options
 @subsection AVR Options
 @cindex AVR Options
@@ -8817,7 +8838,8 @@ are compatible with as many systems and code bases as possible.
 @opindex mkernel
 Enable kernel development mode.  The @option{-mkernel} option sets
 @option{-static}, @option{-fno-common}, @option{-fno-cxa-atexit},
-@option{-fno-exceptions}, @option{-fno-non-call-exceptions},
+@c APPLE LOCAL 5628030
+@option{-fno-exceptions}, @option{-fno-non-call-exceptions}, @option{-fno-asynchronous-unwind-tables},
 @option{-fapple-kext}, @option{-fno-weak} and @option{-fno-rtti} where
 applicable.  This mode also sets @option{-mno-altivec},
 @option{-msoft-float}, @option{-fno-builtin} and
@@ -8871,13 +8893,20 @@ altered by adding a zero word at the end of every vtable.
 this flag.  @option{-findirect-virtual-calls} and
 @option{-fterminated-vtables} are accepted for backwards compatibility
 but will be removed in the future.
-On Intel x86-based Apple platforms, the kernel and its extensions run
-with a four-byte aligned stack
-(@option{-mpreferred-stack-boundary=2}); function prologues inside
-kernel extentions won't keep the usual 16-byte alignment required
-everywhere else in OS X.
 (APPLE ONLY)
 @c APPLE LOCAL end KEXT
+
+@c APPLE LOCAL begin pascal strings
+@item -mpascal-strings
+Allow Pascal-style string literals to be constructed.  This option
+implies @option{-Wpointer-sign} so that conversions between
+Pascal-style strings and C-style strings are warned about.  (APPLE
+ONLY)
+
+@xref{Pascal Strings,,Constructing String Literals with a Pascal-style
+Length Byte}, for more information on the syntax and semantics of Pascal
+string literals.
+@c APPLE LOCAL end pascal strings
 
 @item -all_load
 @opindex all_load

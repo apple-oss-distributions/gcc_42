@@ -24,6 +24,19 @@
 #ifndef GCC_ARM_PROTOS_H
 #define GCC_ARM_PROTOS_H
 
+/* APPLE LOCAL ARM darwin optimization defaults */
+extern void optimization_options (int, int);
+/* APPLE LOCAL begin ARM compact switch tables */
+extern void arm_adjust_insn_length (rtx, int *);
+extern void register_switch8_libfunc (void);
+extern void register_switchu8_libfunc (void);
+extern void register_switch16_libfunc (void);
+extern void register_switch32_libfunc (void);
+extern int count_thumb_unexpanded_prologue (void);
+extern int arm_label_align (rtx);
+/* APPLE LOCAL end ARM compact switch tables */
+/* APPLE LOCAL ARM prefer SP to FP */
+extern HOST_WIDE_INT arm_local_debug_offset (rtx);
 extern void arm_override_options (void);
 extern int use_return_insn (int, rtx);
 extern int arm_regno_class (int);
@@ -79,6 +92,8 @@ extern int arm_no_early_mul_dep (rtx, rtx);
 
 extern int tls_mentioned_p (rtx);
 extern int symbol_mentioned_p (rtx);
+/* APPLE LOCAL ARM -mdynamic-no-pic support */
+extern int non_local_symbol_mentioned_p (rtx);
 extern int label_mentioned_p (rtx);
 extern RTX_CODE minmax_code (rtx);
 extern int adjacent_mem_locations (rtx, rtx);

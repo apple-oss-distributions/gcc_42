@@ -74,6 +74,12 @@ fi
 # to be built.  It's VERS but only up to the second '.' (if there is one).
 MAJ_VERS=`echo $VERS | sed 's/\([0-9]*\.[0-9]*\)[.-].*/\1/'`
 
+# APPLE LOCAL begin ARM ARM_CONFIGFLAGS
+# For ARM, grab all system files from an SDK.
+ARM_SYSROOT="/Developer/SDKs/Extra"
+ARM_CONFIGFLAGS="--with-sysroot=\"$ARM_SYSROOT\""
+# APPLE LOCAL end ARM ARM_CONFIGFLAGS
+
 # This is the libstdc++ version to use.
 LIBSTDCXX_VERSION=4.0.0
 
@@ -136,8 +142,10 @@ if [ \! -f Makefile ]; then
    --host=$BUILD-apple-darwin$DARWIN_VERS --target=$BUILD-apple-darwin$DARWIN_VERS || exit 1
 fi
 # Unset RC_DEBUG_OPTIONS because it causes the bootstrap to fail.
-RC_DEBUG_OPTIONS= \
-  make $MAKEFLAGS CFLAGS="$CFLAGS" CXXFLAGS="$CFLAGS" || exit 1
+# Also keep unset for cross compilers so that the cross built libraries are
+# comparable to the native built libraries.
+unset RC_DEBUG_OPTIONS
+make $MAKEFLAGS CFLAGS="$CFLAGS" CXXFLAGS="$CFLAGS" || exit 1
 make $MAKEFLAGS html CFLAGS="$CFLAGS" CXXFLAGS="$CFLAGS" || exit 1
 make $MAKEFLAGS DESTDIR=$DIR/dst-$BUILD-$BUILD install-gcc install-target \
   CFLAGS="$CFLAGS" CXXFLAGS="$CFLAGS" || exit 1
@@ -173,15 +181,27 @@ for t in `echo $1 $2 | sort -u`; do
 done
 PATH=$DIR/bin:$PATH
 
+# Determine which cross-compilers we should build.  If our build architecture is
+# one of our hosts, add all of the targets to the list.
+if echo $HOSTS | grep $BUILD
+then
+  CROSS_TARGETS=`echo $TARGETS $HOSTS | tr ' ' '\n' | sort -u`
+else
+  CROSS_TARGETS="$HOSTS"
+fi
+
 # Build the cross-compilers, using the compiler we just built.
-for t in $TARGETS ; do
+for t in $CROSS_TARGETS ; do
  if [ $t != $BUILD ] ; then
   mkdir -p $DIR/obj-$BUILD-$t $DIR/dst-$BUILD-$t || exit 1
    cd $DIR/obj-$BUILD-$t || exit 1
    if [ \! -f Makefile ]; then
+    # APPLE LOCAL begin ARM ARM_CONFIGFLAGS
     $SRC_DIR/configure $CONFIGFLAGS --enable-werror-always \
+     `if [ $t = 'arm' ] ; then echo $ARM_CONFIGFLAGS ; fi` \
       --program-prefix=$t-apple-darwin$DARWIN_VERS- \
       --host=$BUILD-apple-darwin$DARWIN_VERS --target=$t-apple-darwin$DARWIN_VERS || exit 1
+    # APPLE LOCAL end ARM ARM_CONFIGFLAGS
    fi
    make $MAKEFLAGS all CFLAGS="$CFLAGS" CXXFLAGS="$CFLAGS" || exit 1
    make $MAKEFLAGS DESTDIR=$DIR/dst-$BUILD-$t install-gcc install-target \
@@ -193,7 +213,7 @@ for t in $TARGETS ; do
 done
 
 # Rearrange various libraries, for no really good reason.
-for t in $TARGETS ; do
+for t in $CROSS_TARGETS ; do
   DT=$DIR/dst-$BUILD-$t
   D=`echo $DT/usr/lib/gcc/$t-apple-darwin$DARWIN_VERS/$VERS`
   mv $D/static/libgcc.a $D/libgcc_static.a || exit 1
@@ -214,9 +234,12 @@ for h in $HOSTS ; do
       fi
 
       if [ \! -f Makefile ]; then
+	# APPLE LOCAL begin ARM ARM_CONFIGFLAGS
         $SRC_DIR/configure $CONFIGFLAGS \
+	  `if [ $t = 'arm' ] && [ $h != 'arm' ] ; then echo $ARM_CONFIGFLAGS ; fi` \
           --program-prefix=$pp \
           --host=$h-apple-darwin$DARWIN_VERS --target=$t-apple-darwin$DARWIN_VERS || exit 1
+	# APPLE LOCAL end ARM ARM_CONFIGFLAGS
       fi
       if [ $h = $t ] ; then
 	  make $MAKEFLAGS all CFLAGS="$CFLAGS" CXXFLAGS="$CFLAGS" || exit 1
@@ -327,9 +350,15 @@ for t in $TARGETS ; do
 done
 
 for t in $TARGETS ; do
-  cp -p /usr/lib/libstdc++.6.dylib \
-    .$DEST_ROOT/lib/gcc/$t-apple-darwin$DARWIN_VERS/$VERS/libstdc++.dylib \
-    || exit 1
+  if [ "$t" == 'arm' ] ; then
+    cp -p $ARM_SYSROOT/usr/lib/libstdc++.6.dylib \
+      .$DEST_ROOT/lib/gcc/$t-apple-darwin$DARWIN_VERS/$VERS/libstdc++.dylib \
+      || exit 1
+  else
+    cp -p /usr/lib/libstdc++.6.dylib \
+      .$DEST_ROOT/lib/gcc/$t-apple-darwin$DARWIN_VERS/$VERS/libstdc++.dylib \
+      || exit 1
+  fi
   strip -x -c .$DEST_ROOT/lib/gcc/$t-apple-darwin$DARWIN_VERS/$VERS/libstdc++.dylib || exit 1
 done
 
@@ -369,7 +398,7 @@ done
 
 # Build driver-driver using fully-named drivers
 for h in $HOSTS ; do
-    $DEST_DIR$DEST_ROOT/bin/$h-apple-darwin$DARWIN_VERS-gcc-$VERS                          \
+    $DIR/dst-$BUILD-$h$DEST_ROOT/bin/$h-apple-darwin$DARWIN_VERS-gcc-$VERS     \
 	$ORIG_SRC_DIR/driverdriver.c                               \
 	-DPDN="\"-apple-darwin$DARWIN_VERS-gcc-$VERS\""                                    \
 	-DIL="\"$DEST_ROOT/bin/\"" -I  $ORIG_SRC_DIR/include                   \
@@ -379,7 +408,7 @@ for h in $HOSTS ; do
         -L$DIR/obj-$h-$BUILD/libiberty/                                        \
 	-o $DEST_DIR/$DEST_ROOT/bin/tmp-$h-gcc-$MAJ_VERS || exit 1
 
-    $DEST_DIR$DEST_ROOT/bin/$h-apple-darwin$DARWIN_VERS-gcc-$VERS                          \
+    $DIR/dst-$BUILD-$h$DEST_ROOT/bin/$h-apple-darwin$DARWIN_VERS-gcc-$VERS     \
 	$ORIG_SRC_DIR/driverdriver.c                               \
 	-DPDN="\"-apple-darwin$DARWIN_VERS-g++-$VERS\""                                    \
 	-DIL="\"$DEST_ROOT/bin/\"" -I  $ORIG_SRC_DIR/include                   \
@@ -400,6 +429,9 @@ ln -f $DEST_DIR/$DEST_ROOT/bin/g++-$MAJ_VERS $DEST_DIR/$DEST_ROOT/bin/c++-$MAJ_V
 
 rm $DEST_DIR/$DEST_ROOT/bin/tmp-*-gcc-$MAJ_VERS || exit 1
 rm $DEST_DIR/$DEST_ROOT/bin/tmp-*-g++-$MAJ_VERS || exit 1
+
+# Remove extraneous stuff
+rm -rf $DEST_DIR/$DEST_ROOT/lib/gcc/*/*/include/c++
 
 ########################################
 # Create SYM_DIR with information required for debugging.

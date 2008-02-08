@@ -874,6 +874,12 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #define LEGITIMATE_PIC_OPERAND_P(X) 1
 #endif
 
+/* APPLE LOCAL begin ARM -mdynamic-no-pic support */
+#ifndef LEGITIMATE_INDIRECT_OPERAND_P
+#define LEGITIMATE_INDIRECT_OPERAND_P(X) (! flag_pic || LEGITIMATE_PIC_OPERAND_P(X))
+#endif
+/* APPLE LOCAL end ARM -mdynamic-no-pic support */
+
 #ifndef REVERSIBLE_CC_MODE
 #define REVERSIBLE_CC_MODE(MODE) 0
 #endif
@@ -913,5 +919,12 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #define HARD_REGNO_NREGS_HAS_PADDING(REGNO, MODE) 0
 #define HARD_REGNO_NREGS_WITH_PADDING(REGNO, MODE) -1
 #endif
+
+/* APPLE LOCAL begin ARM compact switch tables */
+/* Extra cases to add to switch tables.  */
+#ifndef TARGET_EXTRA_CASES
+#define TARGET_EXTRA_CASES 0
+#endif
+/* APPLE LOCAL end ARM compact switch tables */
 
 #endif  /* ! GCC_DEFAULTS_H */

@@ -1835,13 +1835,13 @@ assemble_variable (tree decl, int top_level ATTRIBUTE_UNUSED,
   /* APPLE LOCAL begin zerofill 20020218 --turly  */
 #ifdef ASM_OUTPUT_ZEROFILL
   /* We need a ZEROFILL COALESCED option!  */
-  if (!DECL_COMMON (decl)
+  if ((sect->common.flags & SECTION_COMMON) == 0
       && ! dont_output_data
       && ! DECL_ONE_ONLY (decl)
       && ! DECL_WEAK (decl)
       && (DECL_INITIAL (decl) == 0 || DECL_INITIAL (decl) == error_mark_node))
     {
-      ASM_OUTPUT_ZEROFILL (asm_out_file, name,
+      ASM_OUTPUT_ZEROFILL (asm_out_file, name, sect,
 			   tree_low_cst (DECL_SIZE_UNIT (decl), 1),
 			   floor_log2 (DECL_ALIGN (decl) / BITS_PER_UNIT));
 
@@ -2380,7 +2380,12 @@ decode_addr_const (tree exp, struct addr_const *value)
 {
   tree target = TREE_OPERAND (exp, 0);
   int offset = 0;
-  rtx x;
+  /* APPLE LOCAL begin handle CONST_DECLs 5494472 */
+  rtx x = NULL_RTX;
+
+  if (TREE_CODE (target) == CONST_DECL)
+    target = DECL_INITIAL (target);
+  /* APPLE LOCAL end handle CONST_DECLs 5494472 */
 
   while (1)
     {

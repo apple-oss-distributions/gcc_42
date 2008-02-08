@@ -1,4 +1,11 @@
- # APPLE LOCAL begin for-fsf-4_4 3274130 5295549
+2007-10-07  Geoffrey Keating  <geoffk@apple.com>
+
+	* gcc.dg/pragma-darwin-2.c: New.
+
+2007-09-14  Geoffrey Keating  <geoffk@apple.com>
+
+	* gcc.dg/unwind-1.c: New.
+
 2007-08-03  Geoffrey Keating  <geoffk@apple.com>
 
 	Radar 3274130, 5295549
@@ -13,7 +20,6 @@
 
 	* gcc.dg/align-3.c: New.
 
- # APPLE LOCAL end for-fsf-4_4 3274130 5295549
 2007-06-14  Geoff Keating  <geoffk@apple.com>
 
 	* g++.dg/ext/visibility/overload-1.C: New.

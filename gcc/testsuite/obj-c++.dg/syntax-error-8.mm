@@ -2,7 +2,7 @@
 /* Check that this objective-c++ file does not cause gcc to loop with -fobjc-gc 
    and in presense of syntax error. */
 /* { dg-options "-fobjc-gc" } */
-/* { dg-do compile } */
+/* { dg-do compile { target powerpc*-*-darwin* i?86*-*-darwin* } } */
 
 class TokenStream
 {

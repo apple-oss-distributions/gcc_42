@@ -1,3 +1,369 @@
+2008-02-06  Josh Conner  <jconner@apple.com>
+
+	Radar 5726269
+	* objc.dg/objc2.c: New test.
+
+2008-01-30  Josh Conner  <jconner@apple.com>
+
+	Radar 5683689
+	* gcc.apple/iphone-minversion-[1-4].c: Rename to...
+	* gcc.apple/aspen-minversion-[1-4].c: ...this.  Also,
+	change all iphone references to aspen.
+	* gcc.apple/iphone-minversion-err-[1-8].c: Rename to...
+	* gcc.apple/aspen-minversion-err-[1-8].c: ...this.
+	Also, change all iphone references to aspen.
+	* gcc.apple/iphone-minversion-default-[12].c: Rename to...
+	* gcc.apple/aspen-minversion-default-[12].c: ... this.
+	Also, change all iphone references to aspen.
+
+2008-01-25  Josh Conner  <jconner@apple.com>
+
+	Radar 5660282
+	 * obj-c++.dg/no-offsetof-warn.mm: Only enable for ppc and x86
+	targets.
+	 * obj-c++.dg/objc-gc-1.mm: Likewise.
+	 * obj-c++.dg/objc-gc-10.mm: Likewise.
+	 * obj-c++.dg/objc-gc-11.mm: Likewise.
+	 * obj-c++.dg/objc-gc-2.mm: Likewise.
+	 * obj-c++.dg/objc-gc-3.mm: Likewise.
+	 * obj-c++.dg/objc-gc-5.mm: Likewise.
+	 * obj-c++.dg/objc-gc-6.mm: Likewise.
+	 * obj-c++.dg/objc-gc-7.mm: Likewise.
+	 * obj-c++.dg/objc-gc-8.mm: Likewise.
+	 * obj-c++.dg/objc-gc-9.mm: Likewise.
+	 * obj-c++.dg/objc-gc-assign-ivar-1.mm: Likewise.
+	 * obj-c++.dg/objc-gc-section-2.mm: Likewise.
+	 * obj-c++.dg/objc-gc-weak-1.mm: Likewise.
+	 * obj-c++.dg/objc-gc-weak-2.mm: Likewise.
+	 * obj-c++.dg/objc-gc-weak-3.mm: Likewise.
+	 * obj-c++.dg/objc-gc-weak-4.mm: Likewise.
+	 * obj-c++.dg/objc-gc-weak-5.mm: Likewise.
+	 * obj-c++.dg/objc-weak-pointer.mm: Likewise.
+	 * obj-c++.dg/syntax-error-8.mm: Likewise.
+	 * objc.dg/objc-gc-1.m: Likewise.
+	 * objc.dg/objc-gc-10.m: Likewise.
+	 * objc.dg/objc-gc-2.m: Likewise.
+	 * objc.dg/objc-gc-3.m: Likewise.
+	 * objc.dg/objc-gc-4.m: Likewise.
+	 * objc.dg/objc-gc-5.m: Likewise.
+	 * objc.dg/objc-gc-6.m: Likewise.
+	 * objc.dg/objc-gc-7.m: Likewise.
+	 * objc.dg/objc-gc-8.m: Likewise.
+	 * objc.dg/objc-gc-9.m: Likewise.
+	 * objc.dg/objc-gc-assign-ivar-1.m: Likewise.
+	 * objc.dg/objc-gc-section-2.m: Likewise.
+	 * objc.dg/objc-gc-weak-1.m: Likewise.
+	 * objc.dg/objc-gc-weak-2.m: Likewise.
+	 * objc.dg/objc-gc-weak-3.m: Likewise.
+	 * objc.dg/objc-gc-weak-4.m: Likewise.
+	 * objc.dg/objc-weak-pointer.m: Likewise.
+
+2008-01-23  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 5618945
+	* gcc.apple/5618945-1.c : New.
+	* gcc.apple/5618945-2.c : New.
+	* gcc.apple/5618945-3.c : New.
+
+2008-01-22  Josh Conner  <jconner@apple.com>
+
+	Radar 5683689
+	* gcc.apple/iphone-minversion-1.c: New test.
+	* gcc.apple/iphone-minversion-2.c: New test.
+	* gcc.apple/iphone-minversion-3.c: New test.
+	* gcc.apple/iphone-minversion-4.c: New test.
+	* gcc.apple/iphone-minversion-err-1.c: New test.
+	* gcc.apple/iphone-minversion-err-2.c: New test.
+	* gcc.apple/iphone-minversion-err-3.c: New test.
+	* gcc.apple/iphone-minversion-err-4.c: New test.
+	* gcc.apple/iphone-minversion-err-5.c: New test.
+	* gcc.apple/iphone-minversion-err-6.c: New test.
+	* gcc.apple/iphone-minversion-err-7.c: New test.
+	* gcc.apple/iphone-minversion-err-8.c: New test.
+	* gcc.apple/iphone-minversion-default-1.c: New test.
+	* gcc.apple/iphone-minversion-default-2.c: New test.
+
+2008-01-21  Caroline Tice  <ctice@apple.com>
+
+	Radar 5636185
+	* g++.apple/local.C: New testcase.
+	* g++.apple/namespace.C: New testcase.
+
+2008-01-16  Fariborz Jahanian <fjahanian@apple.com>
+
+	Radar 5370783
+	* objc.dg/method-21.m: Add
+
+2008-01-14  Fariborz Jahanian <fjahanian@apple.com>
+
+	Radar 5676962
+	* objc.dg/proto-bad-propagate-2.m: Add
+	* obj-c++.dg/proto-bad-propagate-2.mm : Add
+
+2008-01-10  Josh Conner  <jconner@apple.com>
+
+	Radar 5675908
+	* objc.dg/objc-gc-assign-ivar-2.m: New file.
+
+2007-12-19  Caroline Tice  <ctice@apple.com
+
+	Radar 5619139
+	* gcc.apple/pubtypes-5.c: New.
+	* gcc.apple/dwarf-files.c: Add APPLE LOCAL marker.
+
+2007-12-11  Josh Conner  <jconner@apple.com>
+
+	Radar 5569774
+
+	Backport from FSF 4.2:
+	2007-07-25  Dorit Nuzman  <dorit@il.ibm.com>
+            Devang Patel  <dpatel@apple.com>
+            Uros Bizjak  <ubizjak@gmail.com>
+        PR tree-optimization/25413
+        * lib/target-supports.exp
+	(check_effective_target_vect_aligned_arrays):
+        New procedure to check if arrays are naturally aligned to the
+	vector alignment boundary.
+        * gcc.dg/vect/vect-align-1.c: New.
+        * gcc.dg/vect/vect-align-2.c: New.
+        * gcc.dg/vect/pr25413.c: New.
+        * gcc.dg/vect/pr25413a.c: New.
+
+2007-12-10  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 4891561
+	* gcc.target/i386/4891561.c: Fixed APPLE LOCAL marker.
+
+2007-12-06  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 4891561
+	* gcc.target/i386/4891561.c: New.
+
+2007-12-06  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 5599048
+	* obj-c++.dg/5599048.mm: Added target darwin.
+
+2007-12-05  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 5599048
+	* obj-c++.dg/5599048.mm: New.
+
+2007-11-30  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 5596043
+	* g++.apple/5596043.C: New.
+
+2007-11-29  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 5612779
+	* gcc.apple/5612779.c: New.
+
+2007-11-29  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 5619052
+        * obj-c++.dg/encode-template.mm: Add
+
+2007-11-29  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 5607453
+        * objc.dg/newproperty-protocol-type.m: Add
+        * obj-c++.dg/newproperty-protocol-type.mm: Add
+
+2007-11-28  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 5610134
+        * objc.dg/newproperty-retain-3.m: Add
+        * objc.dg/newproperty-retain-4.m: Add
+        * obj-c++.dg/newproperty-retain-3.mm: Add
+        * obj-c++.dg/newproperty-retain-4.mm: Add
+
+2007-11-28  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 5591491
+	* g++.apple/5591491.C: New.
+
+2007-11-27  Josh Conner  <jconner@apple.com>
+
+	* g++.old-deja/g++.abi/align2.C: Add ARM support.
+	* g++.dg/align-test-1.C: Likewise.
+	* g++.dg/pch/debug-1.Hs: Change Carbon.h include to
+	CoreFoundation.h.
+	* g++.apple/pubtypes.C: Accept '@' as a comment delimiter.
+
+2007-11-16  Josh Conner  <jconner@apple.com>
+
+	* gcc.c-torture/execute/builtins/builtins.exp: On arm-*-darwin*,
+	enable builtin_strcat and builtin_strcpy.
+	* gcc.c-torture/execute/ieee/mul-subnormal-single-1.x: On
+	arm-*-darwin*, compile with -msoft-float.
+	* gcc.c-torture/execute/ieee/20000320-1.x: New file.
+	* gcc.dg/arm-mmx-1.c: Skip on arm*-apple-darwin*.
+	* gcc.dg/trampoline-1.c: Likewise.
+	* gcc.dg/framework-1.c: Only compile for powerpc and i?86 darwin
+	targets.
+	* gcc.apple/pubtypes-[1234].c: Allow '@' as comment delimiter.
+	* lib/target-supports.exp (check_profiling_available): Disable
+	profiling support on arm*-*-darwin*.
+
+2007-11-14  Josh Conner  <jconner@apple.com>
+
+	Radar 5597292
+	* gcc.apple/5597292.c: New file.
+
+2007-11-13  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 4877693
+	* gcc.apple/4877693.c: New.
+
+2007-11-09  Eric Christopher  <echristo@apple.com>
+
+	Radar 5582941
+	* gcc.apple/sync-1.c: New.
+
+2007-10-30  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 5543378
+	* gcc.apple/x86-5543378.c: New.
+
+2007-10-25  Josh Conner  <jconner@apple.com>
+
+	Radar 3399553
+	* gcc.dg/flt-rounds.c: New.
+
+2007-10-19  Hui-May Chang  <hm.chang@apple.com>
+ 
+	Radar 5450903
+	* gcc.apple/ppc-5450903.c: New.
+
+2007-10-15  Hui-May Chang  <hm.chang@apple.com>
+ 
+	Radar 5494442
+	* g++.apple/altivec-5494442.C: Renamed from apple-altivec-5494442.C.
+
+2007-10-15  Caroline Tice   <ctice@apple.com>
+
+       Radar 5359827
+       * testsuite/objc.dg/pubtypes-id-test.m:  New test case.
+       * testsuite/g++.apple/pubtypes.c:  Change test case to accept any size
+       for the pubtypes section, to eliminate having to change this every
+       time the pubtypes section changes.
+
+2007-10-12  Hui-May Chang  <hm.chang@apple.com>
+ 
+	Radar 5494442
+	* g++.apple/apple-altivec-5494442.C: Replaced -O3 by -O2.
+
+2007-10-12  Hui-May Chang  <hm.chang@apple.com>
+ 
+	Radar 5494442
+	* g++.apple/apple-altivec-5494442.C: New.
+
+2007-10-12  Hui-May Chang  <hm.chang@apple.com>
+ 
+	Radar 5533365
+	* g++.apple/5533365.C: New.
+
+2007-10-08  Eric Christopher  <echristo@apple.com>
+
+	Radar 5516808
+	* gcc.apple/altivec-6.c: New.
+
+2007-10-05  Eric Christopher  <echristo@apple.com>
+
+	Radar 5490617
+	* gcc.apple/5490617.c: New.
+
+2007-09-26  Hui-May Chang  <hm.chang@apple.com>
+ 
+	Radar 5280301
+	* gcc.apple/altivec-5280301.c: New.
+
+2007-09-21  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 5447227
+	* gcc.apple/altivec-5447227.c: New.
+
+2007-09-05  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 5457234
+	* g++.dg/ext/alignof2.C: Modified the test to skip for
+	ppc darwin targets.
+
+2007-09-04  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 5155743
+	* gcc.dg/builtin-alloca-1.c: New.
+	* gcc.dg/builtin-alloca-2.c: New.
+
+2007-08-22  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 4947311
+	* objc.dg/protocol-atttribute-1.m: Add
+	* obj-c++.dg/protocol-atttribute-1.mm: Add
+
+2007-08-21  Hui-May Chang  <hm.chang@apple.com>
+
+	Radar 4874197
+	* gcc.apple/4283414.c: Added mainline candidate comment.
+
+2007-08-21  Fariborz Jahanian <fjahanian@apple.com>
+
+	Radar 5424473
+	* objc.dg/super-finalize-3.m: Add
+
+2007-08-20  Fariborz Jahanian <fjahanian@apple.com>
+
+	Radar 5422751
+	* objc.dg/objc2-protocol-3.m: Removed.
+	* obj-c++.dg/objc2-protocol-3.mm: Removed.
+
+2007-08-16  Fariborz Jahanian <fjahanian@apple.com>
+
+	Radar 3533972
+	* obj-c++.dg/cxx-typeconv-func-1.mm: New
+
+2007-08-14  Hui-May Chang  <hm.chang@apple.com>
+
+        Radar 4870336, 4874471, 4874208
+        * gcc.apple/4874471.c: New.
+
+2007-08-14  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 5409313
+	* obj-c++.dg/objc-neg-selector.mm: New
+
+2007-08-14  Fariborz Jahanian <fjahanian@apple.com>
+
+	Radar 5407792
+	* objc.dg/newproperty-attr-encode-1.m: New
+
+2007-08-10  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 5376125
+        * objc.dg/newproperty-warn-direct-ivar-access.m: New
+        * obj-c++.dg/newproperty-warn-direct-ivar-access.mm: New
+
+2007-08-10  Stuart Hastings  <stuart@apple.com>
+
+	Radar 5238795 4448096
+	* g++.apple/4474655.C: Remove.
+
+2007-08-10  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 5398274
+        * obj-c++.dg/newproperty-nowarn-unused-param.mm: Expanded
+
+2007-08-09  Hui-May Chang <hm.chang@apple.com>
+
+	Radar 4875125
+	* gcc.target/i386/sse-99.c. Added -mtune=generic option. 
+
+2007-08-09  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 3742561 (test change)
+	* obj-c++/objc-gc-aggr-assign-1.mm: Test changed for ppc32.
+
 2007-08-08  Fariborz Jahanian <fjahanian@apple.com>
 
 	Radar 5389292

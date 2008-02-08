@@ -436,7 +436,6 @@ c_lex_with_flags (tree *value, location_t *loc, unsigned char *cpp_flags)
 	    {
 	      iasm_state = iasm_asm;
 	      inside_iasm_block = true;
-	      iasm_clear_labels ();
 	    }
 	  else
 	    {

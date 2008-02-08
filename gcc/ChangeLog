@@ -1,4 +1,29 @@
- # APPLE LOCAL begin for-fsf-4_4 3274130 5295549
+2006-10-24  Richard Guenther  <rguenther@suse.de>
+	       
+	Radar 5675014
+	PR middle-end/28796
+	* builtins.c (fold_builtin_classify): Use HONOR_INFINITIES
+	and HONOR_NANS instead of MODE_HAS_INFINITIES and MODE_HAS_NANS
+	for deciding optimizations in consistency with fold-const.c
+	(fold_builtin_unordered_cmp): Likewise.
+	
+2007-10-07  Geoffrey Keating  <geoffk@apple.com>
+
+	* config/darwin.h (DARWIN_REGISTER_TARGET_PRAGMAS): Register
+	'#pragma mark' to be executed at preprocessing time.
+
+2007-09-14  Geoffrey Keating  <geoffk@apple.com>
+
+	Radar 5480287
+	* dwarf2out.c (output_call_frame_info): FDEs are always emitted
+	if flag_exceptions is not set.
+	* config/darwin.c (darwin_emit_unwind_label): Rewrite to use
+	assemble_name rather than incorrectly emulating it.
+
+	Radar 5482863
+	* doc/extend.texi (Deprecated Features): Mention that <? and >? and
+	friends are removed from G++.
+
 2007-08-02  Geoffrey Keating  <geoffk@apple.com>
 
 	Radar 3274130, 5295549
@@ -53,7 +78,6 @@
 	* varasm.c (assemble_start_function): Use DECL_ALIGN instead of
 	FUNCTION_BOUNDARY.
 
- # APPLE LOCAL end for-fsf-4_4 3274130 5295549
 2007-06-21  H.J. Lu  <hongjiu.lu@intel.com>
 
 	Radar 5289915

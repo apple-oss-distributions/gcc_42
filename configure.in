@@ -368,6 +368,12 @@ case "${target}" in
   *-*-chorusos)
     noconfigdirs="$noconfigdirs target-newlib target-libgloss ${libgcj}"
     ;;
+  # APPLE LOCAL begin ARM darwin target
+  arm-*-darwin*)
+    noconfigdirs="$noconfigdirs target-libgomp target-libobjc"
+    noconfigdirs="$noconfigdirs target-libstdc++-v3 target-libssp"
+    ;;
+  # APPLE LOCAL end ARM darwin target
   powerpc-*-darwin* | i[[3456789]]86-*-darwin*)
     noconfigdirs="$noconfigdirs bfd binutils ld gas opcodes gdb gprof"
     noconfigdirs="$noconfigdirs sim target-rda"

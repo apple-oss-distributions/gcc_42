@@ -337,9 +337,16 @@ Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
    TARGET_SCHED_SET_SCHED_FLAGS}
 
 #define TARGET_VECTORIZE_BUILTIN_MASK_FOR_LOAD 0
+/* APPLE LOCAL begin mainline 4.2 5569774 */
+#define TARGET_VECTOR_ALIGNMENT_REACHABLE \
+  default_builtin_vector_alignment_reachable
+/* APPLE LOCAL end mainline 4.2 5569774 */
 
 #define TARGET_VECTORIZE                                                \
-  {TARGET_VECTORIZE_BUILTIN_MASK_FOR_LOAD}
+  /* APPLE LOCAL begin mainline 4.2 5569774 */				\
+  {TARGET_VECTORIZE_BUILTIN_MASK_FOR_LOAD,				\
+   TARGET_VECTOR_ALIGNMENT_REACHABLE}
+  /* APPLE LOCAL end mainline 4.2 5569774 */
 
 #define TARGET_DEFAULT_TARGET_FLAGS 0
 
@@ -530,6 +537,10 @@ Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 #define TARGET_FUNCTION_VALUE default_function_value
 #define TARGET_INTERNAL_ARG_POINTER default_internal_arg_pointer
+
+/* APPLE LOCAL begin radar 5155743, mainline candidate */
+#define TARGET_HAVE_DYNAMIC_STACK_SPACE false
+/* APPLE LOCAL end radar 5155743, mainline candidate */
 
 #define TARGET_CALLS {						\
    TARGET_PROMOTE_FUNCTION_ARGS,				\
@@ -742,7 +753,10 @@ Foundation, 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
   TARGET_HANDLE_PRAGMA_REDEFINE_EXTNAME,	\
   TARGET_HANDLE_PRAGMA_EXTERN_PREFIX,		\
   TARGET_RELAXED_ORDERING,			\
-  TARGET_ARM_EABI_UNWINDER			\
+  /* APPLE LOCAL begin radar 5155743, mainline candidate */	\
+  TARGET_ARM_EABI_UNWINDER,			\
+  TARGET_HAVE_DYNAMIC_STACK_SPACE		\
+  /* APPLE LOCAL end radar 5155743, mainline candidate */	\
 }
 
 #include "hooks.h"

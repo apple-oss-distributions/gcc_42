@@ -975,15 +975,15 @@ warn_deprecated_use (tree node)
 /* APPLE LOCAL begin "unavailable" attribute (radar 2809697) --ilr */
 /* Warn about a use of an identifier which was marked deprecated.  */
 void
-warn_unavailable_use (tree node)
+error_unavailable_use (tree node)
 {
   if (node == 0)
     return;
 
   if (DECL_P (node))
-    warning (0, "%qs is unavailable (declared at %s:%d)",
-	     IDENTIFIER_POINTER (DECL_NAME (node)),
-	     DECL_SOURCE_FILE (node), DECL_SOURCE_LINE (node));
+    error ("%qs is unavailable (declared at %s:%d)",
+	   IDENTIFIER_POINTER (DECL_NAME (node)),
+	   DECL_SOURCE_FILE (node), DECL_SOURCE_LINE (node));
   else if (TYPE_P (node))
     {
       const char *what = NULL;
@@ -998,16 +998,16 @@ warn_unavailable_use (tree node)
       if (what)
 	{
 	  if (decl)
-	    warning (0, "%qs is unavailable (declared at %s:%d)", what,
-		     DECL_SOURCE_FILE (decl), DECL_SOURCE_LINE (decl));
+	    error ("%qs is unavailable (declared at %s:%d)", what,
+		   DECL_SOURCE_FILE (decl), DECL_SOURCE_LINE (decl));
 	  else
-	    warning (0, "%qs is unavailable", what);
+	    error ("%qs is unavailable", what);
 	}
       else if (decl)
-	warning (0, "type is unavailable (declared at %s:%d)",
-		 DECL_SOURCE_FILE (decl), DECL_SOURCE_LINE (decl));
+	error ("type is unavailable (declared at %s:%d)",
+	       DECL_SOURCE_FILE (decl), DECL_SOURCE_LINE (decl));
       else
-	warning (0, "type is unavailable");
+	error ("type is unavailable");
     }
 }
 /* APPLE LOCAL end "unavailable" attribute (radar 2809697) --ilr */

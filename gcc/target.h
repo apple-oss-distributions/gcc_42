@@ -375,6 +375,12 @@ struct gcc_target
        by the vectorizer, and return the decl of the target builtin
        function.  */
     tree (* builtin_mask_for_load) (void);
+
+    /* APPLE LOCAL begin mainline 4.2 5569774 */
+    /* Return true if vector alignment is reachable (by peeling N
+      interations) for the given type.  */
+     bool (* vector_alignment_reachable) (tree, bool);
+    /* APPLE LOCAL end mainline 4.2 5569774 */
   } vectorize;
 
   /* The initial value of target_flags.  */
@@ -882,6 +888,9 @@ struct gcc_target
    */
   bool arm_eabi_unwinder;
 
+/* APPLE LOCAL begin radar 5155743, mainline candidate */
+  bool have_dynamic_stack_space;
+/* APPLE LOCAL end radar 5155743, mainline candidate */
   /* Leave the boolean fields at the end.  */
 };
 

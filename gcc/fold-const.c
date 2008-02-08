@@ -5661,6 +5661,14 @@ extract_muldiv_1 (tree t, tree c, enum tree_code code, tree wide_type,
             }
           break;
         }
+      /* APPLE LOCAL begin radar 5612779, mainline candidate */
+      /* Do not move a negative constant from an ABS_EXPR. */
+      else if (!TYPE_UNSIGNED (ctype)
+               && !TYPE_UNSIGNED (type)
+               && TREE_CODE (c) == INTEGER_CST
+               && TREE_INT_CST_HIGH (c) < 0)
+        break;
+      /* APPLE LOCAL end radar 5612779, mainline candidate */
       /* FALLTHROUGH */
     case NEGATE_EXPR:
       if ((t1 = extract_muldiv (op0, c, code, wide_type, strict_overflow_p))

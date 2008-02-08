@@ -970,7 +970,9 @@ build_vector (tree type, tree vals)
   int over1 = 0, over2 = 0;
   tree link;
   /* APPLE LOCAL begin AltiVec */
-  int max_index, count = 0;
+  /* APPLE LOCAL begin AltiVec, radar 4870336, 4874471, 4874208 */
+  int count = 0;
+  /* APPLE LOCAL end AltiVec, radar 4870336, 4874471, 4874208 */
   tree list = NULL_TREE;
   /* APPLE LOCAL end AltiVec */
 
@@ -997,8 +999,11 @@ build_vector (tree type, tree vals)
       over2 |= TREE_CONSTANT_OVERFLOW (value);
     }
 
-  /* APPLE LOCAL begin AltiVec */
-  max_index = TYPE_VECTOR_SUBPARTS (type);
+  /* APPLE LOCAL begin AltiVec, radar 4870336, 4874471, 4874208 */
+#ifdef TARGET_PIM_ALTIVEC
+  if (TARGET_PIM_ALTIVEC)
+  {
+  int max_index = TYPE_VECTOR_SUBPARTS (type);
   if (count > 0 && count < max_index)
     {
       int index;
@@ -1008,7 +1013,9 @@ build_vector (tree type, tree vals)
                          build_tree_list (NULL_TREE,
                                           convert (TREE_TYPE (type), expr)));
     }
-  /* APPLE LOCAL end AltiVec */
+  }
+#endif
+  /* APPLE LOCAL end AltiVec, radar 4870336, 4874471, 4874208 */
 
   TREE_OVERFLOW (v) = over1;
   TREE_CONSTANT_OVERFLOW (v) = over2;
