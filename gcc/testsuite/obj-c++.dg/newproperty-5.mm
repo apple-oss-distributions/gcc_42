@@ -1,7 +1,8 @@
 /* APPLE LOCAL file radar 5285911 */
 /* Test that can have a 'setter' method only without a property or the corresponding
    'getter' method. */
-/* { dg-options "-mmacosx-version-min=10.5 -framework Foundation" } */
+/* { dg-options "-mmacosx-version-min=10.5 -framework Foundation" { target powerpc*-*-darwin* i?86*-*-darwin* } } */
+/* { dg-options "-framework Foundation" { target arm*-*-darwin* } } */
 /* { dg-do run { target *-*-darwin* } } */
 
 #import <Foundation/Foundation.h>

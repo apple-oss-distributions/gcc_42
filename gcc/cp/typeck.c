@@ -2113,6 +2113,10 @@ finish_class_member_access_expr (tree object, tree name, bool template_p)
 	  /* APPLE LOCAL radar 5285911 */
           && (expr = objc_build_property_reference_expr (object, name)))
         return expr;
+      /* APPLE LOCAL begin radar 5802025 */
+      else if (objc_property_reference_expr (object))
+        object = objc_build_property_getter_func_call (object);
+      /* APPLE LOCAL end radar 5802025 */
     }
   /* APPLE LOCAL end C* property (Radar 4436866) */
 
@@ -3533,7 +3537,8 @@ build_binary_op (enum tree_code code, tree orig_op0, tree orig_op1,
 	      || !same_scalar_type_ignoring_signedness (TREE_TYPE (type0),
 							TREE_TYPE (type1)))
 	    {
-	      binary_op_error (code);
+	      /* APPLE LOCAL 5612787 mainline sse4 */
+	      binary_op_error (code, type0, type1);
 	      return error_mark_node;
 	    }
 	  arithmetic_types_p = 1;
@@ -6519,7 +6524,8 @@ convert_for_assignment (tree type, tree rhs,
   coder = TREE_CODE (rhstype);
 
   if (TREE_CODE (type) == VECTOR_TYPE && coder == VECTOR_TYPE
-      && vector_types_convertible_p (type, rhstype))
+      /* APPLE LOCAL 5612787 mainline sse4 */
+      && vector_types_convertible_p (type, rhstype, true))
     return convert (type, rhs);
 
   if (rhs == error_mark_node || rhstype == error_mark_node)
@@ -7081,7 +7087,8 @@ ptr_reasonably_similar (tree to, tree from)
 	continue;
 
       if (TREE_CODE (to) == VECTOR_TYPE
-	  && vector_types_convertible_p (to, from))
+	  /* APPLE LOCAL 5612787 mainline sse4 */
+	  && vector_types_convertible_p (to, from, false))
 	return 1;
 
       if (TREE_CODE (to) == INTEGER_TYPE

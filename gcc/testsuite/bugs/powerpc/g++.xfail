@@ -10,22 +10,7 @@
 ### file and make sure the Radar is closed.
 ###
 ###------------------------------------------------------------------
-3222046: g++.dg/warn/weak1.C (test for excess errors)
-3223598: g++.dg/special/conpr-3.C execution test
 4531667: g++.dg/bitreverse-23.C execution test
-4872028: g++.dg/other/unused1.C scan-assembler (string|ascii?)z?\t"class2("|\\\\000)
-4872028: g++.dg/other/unused1.C scan-assembler (string|ascii?)z?\t"printer("|\\\\000)
-5317196: g++.old-deja/g++.pt/const2.C (test for excess errors)
 #
-# The following tests fail only when the c++ suite is run through Obj-C++.
-#
-# The following tests fail only when the c++ suite is run with -m64
-#
-# The following tests fail only when the c++ suite is run on ppc with -m64
-#
-# The following tests fail only when the c++ suite is run on x86
-5103201: tmpdir-g++.dg-struct-layout-1/t026 cp_compat_x_tst.o-cp_compat_y_tst.o execute
-#
-# The following tests fail only when the c++ suite is run on G5 with -m64
-#
-# The following tests fail only when the c++ suite is run on x86 with -m64
+# The following tests fail only when the c++ suite is run with -mcpu=G5
+5822514: g++.dg/altivec-8.C execution test

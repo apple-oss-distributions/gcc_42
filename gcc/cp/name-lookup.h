@@ -311,7 +311,8 @@ extern void pop_inner_scope (tree, tree);
 extern void push_binding_level (struct cp_binding_level *);
 
 extern void push_namespace (tree);
-extern void push_namespace_with_attribs (tree, tree);
+/* APPLE LOCAL visibility 5805832 */
+extern bool push_namespace_with_attribs (tree, tree);
 extern void pop_namespace (void);
 extern void push_nested_namespace (tree);
 extern void pop_nested_namespace (tree);

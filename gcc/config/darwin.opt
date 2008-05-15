@@ -28,9 +28,9 @@ mmacosx-version-min=
 Target Joined Report Var(darwin_macosx_version_min) Init(NULL)
 The earliest MacOS X version on which this program will run
 
-maspen-version-min=
-Target Joined Report Var(darwin_aspen_version_min) Init(NULL)
-The earliest Aspen version on which this program will run
+miphoneos-version-min=
+Target Joined Report Var(darwin_iphoneos_version_min) Init(NULL)
+The earliest iPhone OS version on which this program will run
 ; APPLE LOCAL end ARM 5683689
 
 mone-byte-bool

@@ -159,7 +159,7 @@ output_objc_section_asm_op (const void *directive)
 	  objc_v2_super_classrefs_section,
 	  objc_v2_image_info_section,
 	  objc_v2_constant_string_object_section
-	};
+	} ;
       /* APPLE LOCAL end ObjC abi v2 - radar 4792158 */
       size_t i;
 
@@ -1344,12 +1344,14 @@ machopic_select_section (tree exp, int reloc,
 
   /* APPLE LOCAL begin fwritable strings  */
   if (TREE_CODE (exp) == STRING_CST
-      && ((size_t) TREE_STRING_LENGTH (exp)
+      /* APPLE LOCAL begin 5612787 mainline sse4 */
+      /* deletion */
       /* Copied from varasm.c:output_constant_def_contents().  5346453 */
       && (MAX ((HOST_WIDE_INT)TREE_STRING_LENGTH (exp),
 	       int_size_in_bytes (TREE_TYPE (exp)))
 	  /* APPLE LOCAL ARM signedness mismatch */
-	  == (HOST_WIDE_INT) strlen (TREE_STRING_POINTER (exp)) + 1))
+	  == (HOST_WIDE_INT) strlen (TREE_STRING_POINTER (exp)) + 1)
+      /* APPLE LOCAL end 5612787 mainline sse4 */
       && ! flag_writable_strings)
     return darwin_sections[cstring_section];
   /* APPLE LOCAL end fwritable strings, 5346453 */

@@ -761,7 +761,8 @@ digest_init (tree type, tree init)
       if (code == VECTOR_TYPE
 	  && TREE_CODE (init) == VAR_DECL
 	  && TREE_CODE (TREE_TYPE (init)) == VECTOR_TYPE
-          && vector_types_convertible_p (TREE_TYPE (init), type)
+	  /* APPLE LOCAL 5612787 mainline sse4 */
+          && vector_types_convertible_p (TREE_TYPE (init), type, true)
 	  && TYPE_READONLY (type)
 	  && !TYPE_VOLATILE (type))
 	{
@@ -777,7 +778,8 @@ digest_init (tree type, tree init)
       if (code == VECTOR_TYPE
           && TREE_CODE (init) == CONSTRUCTOR
           && TREE_CODE (TREE_TYPE (init)) == VECTOR_TYPE
-          && vector_types_convertible_p (TREE_TYPE (init), type)
+	  /* APPLE LOCAL 5612787 mainline sse4 */
+          && vector_types_convertible_p (TREE_TYPE (init), type, true)
           && TREE_CONSTANT (init))
         return build_vector_from_ctor (type, CONSTRUCTOR_ELTS (init));
       /* APPLE LOCAL end AltiVec */

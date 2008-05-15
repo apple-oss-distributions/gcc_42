@@ -63,6 +63,10 @@ extern void arm_encode_call_attribute (tree, int);
 extern bool arm_vector_mode_supported_p (enum machine_mode);
 extern int arm_hard_regno_mode_ok (unsigned int, enum machine_mode);
 extern int const_ok_for_arm (HOST_WIDE_INT);
+/* APPLE LOCAL begin 5831562 long long constants */
+extern bool const64_ok_for_arm_immediate (rtx);
+extern bool const64_ok_for_arm_add (rtx);
+/* APPLE LOCAL end 5831562 long long constants */
 extern int arm_split_constant (RTX_CODE, enum machine_mode, rtx,
 			       HOST_WIDE_INT, rtx, rtx, int);
 extern RTX_CODE arm_canonicalize_comparison (RTX_CODE, enum machine_mode,
@@ -185,6 +189,12 @@ extern void thumb_reload_out_hi (rtx *);
 extern void thumb_reload_in_hi (rtx *);
 extern void thumb_set_return_address (rtx, rtx);
 #endif
+
+/* APPLE LOCAL begin ARM enhance conditional insn generation */
+#ifdef BB_HEAD
+extern void arm_ifcvt_modify_multiple_tests (ce_if_block_t *, basic_block, rtx *, rtx*);
+#endif
+/* APPLE LOCAL end ARM enhance conditional insn generation */
 
 /* Defined in pe.c.  */
 extern int arm_dllexport_name_p (const char *);

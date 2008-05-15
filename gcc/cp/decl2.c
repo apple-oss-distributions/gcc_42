@@ -1599,6 +1599,17 @@ constrain_visibility (tree decl, int visibility)
       DECL_VISIBILITY (decl) = visibility;
       return true;
     }
+  /* APPLE LOCAL begin constrain visibility for templates 5813435 */
+  else if (visibility > DECL_VISIBILITY (decl)
+	   && DECL_VISIBILITY_SPECIFIED (decl)
+	   && !lookup_attribute ("visibility", DECL_ATTRIBUTES (decl))
+	   && !lookup_attribute ("dllexport", DECL_ATTRIBUTES (decl)))
+    {
+      /* We also constrain implicit visibilities (for templates).  */
+      DECL_VISIBILITY (decl) = visibility;
+      return true;
+    }
+  /* APPLE LOCAL end constrain visibility for templates 5813435 */
   return false;
 }
 
@@ -2677,13 +2688,30 @@ does_nothing_p (tree exp)
     return does_nothing_p (BIND_EXPR_BODY (exp));
   else if (TREE_CODE (exp) == MODIFY_EXPR)
     {
+      bool was_set_zero = (integer_zerop (TREE_OPERAND (exp, 1))
+			   || real_zerop (TREE_OPERAND (exp, 1)));
+
       if (TREE_SIDE_EFFECTS (TREE_OPERAND (exp, 1)))
 	return false;
       exp = TREE_OPERAND (exp, 0);
       if (TREE_SIDE_EFFECTS (exp))
 	return false;
       if (TREE_CODE (exp) != VAR_DECL)
-	return false;
+	{
+	  /* Modifications of this object with zero don't count either
+	     as all objects initialized by file scope constructors are
+	     required to be zero initialized first.  */
+	  if (was_set_zero
+	      && TREE_CODE (exp) == COMPONENT_REF
+	      && !TREE_SIDE_EFFECTS (exp)
+	      && TREE_CODE (TREE_OPERAND (exp, 1)) == FIELD_DECL
+	      && TREE_CODE (exp=TREE_OPERAND (exp, 0)) == INDIRECT_REF
+	      && TREE_CODE (exp=TREE_OPERAND (exp, 0)) == PARM_DECL
+	      && DECL_NAME (exp) == this_identifier)
+	    return true;
+	    
+	  return false;
+	}
       if (TREE_STATIC (exp))
 	return false;
 

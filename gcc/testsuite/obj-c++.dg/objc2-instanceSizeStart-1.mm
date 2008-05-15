@@ -1,5 +1,5 @@
 /* APPLE LOCAL file radar 5333233 */
-/* { dg-do compile { target *-*-darwin* } } */
+/* { dg-do compile { target powerpc*-*-darwin* i?86*-*-darwin* } } */
 /* { dg-options "-mmacosx-version-min=10.5 -m64" } */
 
 @interface Super { id isa; } @end

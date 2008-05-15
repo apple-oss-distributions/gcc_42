@@ -40,6 +40,8 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #include "tm.h"
 #include "tree.h"
 #include "version.h"
+/* APPLE LOCAL radar 2338865 optimization notification  */
+#include "options.h"
 #include "flags.h"
 #include "real.h"
 #include "rtl.h"
@@ -67,6 +69,8 @@ Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
 #include "hashtab.h"
 #include "cgraph.h"
 #include "input.h"
+/* APPLE LOCAL Radar 5741731, typedefs used in '@try' blocks    */ 
+#include "c-common.h"
 
 #ifdef DWARF2_DEBUGGING_INFO
 static void dwarf2out_source_line (unsigned int, const char *);
@@ -416,6 +420,13 @@ static void def_cfa_1 (const char *, dw_cfa_location *);
 #ifndef DWARF_FRAME_REGNUM
 #define DWARF_FRAME_REGNUM(REG) DBX_REGISTER_NUMBER (REG)
 #endif
+
+/* APPLE LOCAL begin differentiate between arm & thumb.  */
+#define DW_ISA_UNKNOWN         0
+#define DW_ISA_ARM_thumb       1
+#define DW_ISA_ARM_arm         2
+#define DW_ISA_USE_STMT_LIST  -1
+/* APPLE LOCAL end differentiate between arm & thumb.  */
 
 /* Hook used by __throw.  */
 
@@ -4773,6 +4784,17 @@ dwarf_attr_name (unsigned int attr)
     case DW_AT_VMS_rtnbeg_pd_address:
       return "DW_AT_VMS_rtnbeg_pd_address";
 
+    /* APPLE LOCAL begin radar 2338865 optimization notification  */
+    case DW_AT_APPLE_flags:
+      return "DW_AT_APPLE_flags";
+    case DW_AT_APPLE_optimized:
+      return "DW_AT_APPLE_optimized";
+    /* APPLE LOCAL end radar 2338865 optimization notification  */
+    /* APPLE LOCAL begin differentiate between arm & thumb.  */
+    case DW_AT_APPLE_isa:
+      return "DW_AT_APPLE_isa";
+    /* APPLE LOCAL end differentiate between arm & thumb.  */
+
     default:
       return "DW_AT_<unknown>";
     }
@@ -8582,6 +8604,17 @@ modified_type_die (tree type, int is_const_type, int is_volatile_type,
   if (code == ERROR_MARK)
     return NULL;
 
+  /* APPLE LOCAL begin Radar 5741731, typedefs used in '@try' blocks    */ 
+  if (is_volatile_type
+      && c_dialect_objc ()
+      && lookup_attribute ("objc_volatilized", TYPE_ATTRIBUTES (type)))
+    {
+      is_volatile_type = 0;
+      if (TYPE_NAME (type) && TREE_TYPE (TYPE_NAME (type)))
+	type = TREE_TYPE (TYPE_NAME (type));
+    }
+  /* APPLE LOCAL end Radar 5741731, typedefs used in '@try' blocks    */ 
+
   /* See if we already have the appropriately qualified variant of
      this type.  */
   qualified_type
@@ -11139,8 +11172,12 @@ add_bit_size_attribute (dw_die_ref die, tree decl)
 static inline void
 add_prototyped_attribute (dw_die_ref die, tree func_type)
 {
-  if (get_AT_unsigned (comp_unit_die, DW_AT_language) == DW_LANG_C89
+  /* APPLE LOCAL begin radar 5344182 */
+  unsigned int lang = get_AT_unsigned (comp_unit_die, DW_AT_language);
+  
+  if ((lang == DW_LANG_C89 || lang == DW_LANG_ObjC)
       && TYPE_ARG_TYPES (func_type) != NULL)
+   /* APPLE LOCAL end radar 5344182 */
     add_AT_flag (die, DW_AT_prototyped, 1);
 }
 
@@ -12308,6 +12345,18 @@ gen_subprogram_die (tree decl, dw_die_ref context_die)
   /* Add the calling convention attribute if requested.  */
   add_calling_convention_attribute (subr_die, TREE_TYPE (decl));
 
+  /* APPLE LOCAL begin radar 2338865 optimization notification  */
+  if (optimize > 0)
+    add_AT_flag (subr_die, DW_AT_APPLE_optimized, 1);
+  /* APPLE LOCAL end radar 2338865 optimization notification  */
+  /* APPLE LOCAL begin differentiate between arm & thumb.  */
+#ifdef TARGET_ARM
+  if (TARGET_THUMB)
+    add_AT_int (subr_die, DW_AT_APPLE_isa, DW_ISA_ARM_thumb);
+  else if (TARGET_ARM)
+    add_AT_int  (subr_die, DW_AT_APPLE_isa, DW_ISA_ARM_arm);
+#endif
+  /* APPLE LOCAL end differentiate between arm & thumb.  */
 }
 
 /* Generate a DIE to represent a declared data object.  */
@@ -14724,6 +14773,11 @@ dwarf2out_finish (const char *filename)
       add_AT_string (comp_unit_die, DW_AT_APPLE_flags, get_arguments());
   }
   /* APPLE LOCAL end option verifier 4957887 */
+  
+  /* APPLE LOCAL begin radar 2338865 optimization notification  */
+  if (optimize > 0)
+    add_AT_flag (comp_unit_die, DW_AT_APPLE_optimized, 1);
+  /* APPLE LOCAL end radar 2338865 optimization notification  */
 
   /* Traverse the limbo die list, and add parent/child links.  The only
      dies without parents that should be here are concrete instances of

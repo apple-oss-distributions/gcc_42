@@ -10,7 +10,7 @@ set -x
 # -arch arguments are different than configure arguments. We need to
 # translate them.
 
-TRANSLATE_ARCH="sed -e s/ppc/powerpc/ -e s/i386/i686/"
+TRANSLATE_ARCH="sed -e s/ppc/powerpc/ -e s/i386/i686/ -e s/armv6/arm/"
 
 # Build GCC the "Apple way".
 # Parameters:

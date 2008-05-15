@@ -6,7 +6,7 @@ set -x
 # -arch arguments are different than configure arguments. We need to
 # translate them.
 
-TRANSLATE_ARCH="sed -e s/ppc/powerpc/ -e s/i386/i686/"
+TRANSLATE_ARCH="sed -e s/ppc/powerpc/ -e s/i386/i686/ -e s/armv6/arm/"
 
 # Build GCC the "Apple way".
 # Parameters:
@@ -81,7 +81,10 @@ ARM_CONFIGFLAGS="--with-sysroot=\"$ARM_SYSROOT\""
 # APPLE LOCAL end ARM ARM_CONFIGFLAGS
 
 # This is the libstdc++ version to use.
-LIBSTDCXX_VERSION=4.0.0
+LIBSTDCXX_VERSION=4.2.1
+if [ ! -d "$DEST_ROOT/include/c++/$LIBSTDCXX_VERSION" ]; then
+  LIBSTDCXX_VERSION=4.0.0
+fi
 
 DARWIN_VERS=`uname -r | sed 's/\..*//'`
 echo DARWIN_VERS = $DARWIN_VERS
@@ -101,12 +104,12 @@ mkdir $SRC_DIR || exit 1
 ln -s $ORIG_SRC_DIR/* $SRC_DIR/ || exit 1
 rm -rf $SRC_DIR/tcl $SRC_DIR/expect $SRC_DIR/dejagnu || exit 1
 # Also remove libstdc++ since it is built from a separate project.
-rm -rf $SRC_DIR/libstdc++-v3 || exit 1
+# rm -rf $SRC_DIR/libstdc++-v3 || exit 1
 # Clean out old specs files
 rm -f /usr/lib/gcc/*/4.0.0/specs
 
 # These are the configure and build flags that are used.
-CONFIGFLAGS="--disable-checking -enable-werror \
+CONFIGFLAGS="--disable-checking --enable-werror \
   --prefix=$DEST_ROOT \
   --mandir=\${prefix}/share/man \
   --enable-languages=c,objc,c++,obj-c++ \
@@ -219,6 +222,12 @@ for t in $CROSS_TARGETS ; do
   mv $D/static/libgcc.a $D/libgcc_static.a || exit 1
   mv $D/kext/libgcc.a $D/libcc_kext.a || exit 1
   rm -r $D/static $D/kext || exit 1
+  # glue together kext64 stuff
+  if [ -e $D/kext64/libgcc.a ]; then
+    libtool -static $D/{kext64/libgcc.a,libcc_kext.a} -o $D/libcc_kext1.a 2>&1 | grep -v 'has no symbols'
+    mv $D/libcc_kext1.a $D/libcc_kext.a
+    rm -rf $D/kext64
+  fi
 done
 
 # Build the cross-hosted compilers.
@@ -326,9 +335,14 @@ for t in $TARGETS ; do
     .$DEST_ROOT/lib/gcc || exit 1
 done
 
+# APPLE LOCAL begin native compiler support
+# libgomp is not built for ARM
+LIBGOMP_TARGETS=`echo $TARGETS | sed -E -e 's/(^|[[:space:]])arm($|[[:space:]])/ /'`
+LIBGOMP_HOSTS=`echo $HOSTS | sed -E -e 's/(^|[[:space:]])arm($|[[:space:]])/ /'`
+
 # And copy libgomp stuff by hand...
-for t in $TARGETS ; do
-    for h in $HOSTS ; do
+for t in $LIBGOMP_TARGETS ; do
+    for h in $LIBGOMP_HOSTS ; do
 	if [ $h = $t ] ; then
 	    cp -p $DIR/dst-$h-$t$DEST_ROOT/lib/libgomp.a \
 		.$DEST_ROOT/lib/gcc/$t-apple-darwin$DARWIN_VERS/$VERS/ || exit 1
@@ -348,6 +362,7 @@ for t in $TARGETS ; do
 	fi
     done
 done
+# APPLE LOCAL end native compiler support
 
 for t in $TARGETS ; do
   if [ "$t" == 'arm' ] ; then

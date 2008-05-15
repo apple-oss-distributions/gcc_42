@@ -585,3 +585,9 @@ objc_check_nsstring_pointer_type (tree ARG_UNUSED (type))
 }
 /* APPLE LOCAL end radar 5195402 */
 /* APPLE LOCAL end radar 5202926 */
+/* APPLE LOCAL begin radar 5802025 */
+tree objc_build_property_getter_func_call (tree object)
+{
+  return object;
+}
+/* APPLE LOCAL end radar 5802025 */

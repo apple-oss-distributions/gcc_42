@@ -5868,6 +5868,16 @@ expand_static_init (tree decl, tree init)
       && TYPE_HAS_TRIVIAL_DESTRUCTOR (TREE_TYPE (decl)))
     return;
 
+  /* APPLE LOCAL begin radar 5733674 */
+  if (c_dialect_objc () && flag_objc_gc && init && TREE_CODE (init) == INIT_EXPR)
+  {
+    tree result = objc_generate_write_barrier (TREE_OPERAND (init, 0), 
+                                               INIT_EXPR, TREE_OPERAND (init, 1));
+    if (result)
+      init = result;
+  }
+  /* APPLE LOCAL end radar 5733674 */
+  
   if (DECL_FUNCTION_SCOPE_P (decl))
     {
       /* Emit code to perform this initialization but once.  */

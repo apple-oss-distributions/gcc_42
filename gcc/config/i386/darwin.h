@@ -25,7 +25,9 @@ Boston, MA 02110-1301, USA.  */
 
 /* APPLE LOCAL begin mainline */
 #undef  TARGET_64BIT
+/* APPLE LOCAL begin 5612787 mainline sse4 */
 #define TARGET_64BIT (target_flags & MASK_64BIT)
+/* APPLE LOCAL end 5612787 mainline sse4 */
 
 #ifdef IN_LIBGCC2
 #undef TARGET_64BIT
@@ -96,7 +98,7 @@ Boston, MA 02110-1301, USA.  */
   "/* APPLE LOCAL ARM ignore -mthumb and -mno-thumb */"\
   %<mthumb %<mno-thumb \
   "/* APPLE LOCAL ARM 5683689 */"\
-  %{!mmacosx-version-min=*: %{!maspen-version-min=*: %(darwin_cc1_minversion)}} \
+  %{!mmacosx-version-min=*: %{!miphoneos-version-min=*: %(darwin_cc1_minversion)}} \
   "/* APPLE LOCAL ignore -mcpu=G4 -mcpu=G5 */"\
   %<faltivec %<mno-fused-madd %<mlong-branch %<mlongcall %<mcpu=G4 %<mcpu=G5 \
   %{g: %{!fno-eliminate-unused-debug-symbols: -feliminate-unused-debug-symbols }}"
@@ -130,12 +132,11 @@ Boston, MA 02110-1301, USA.  */
 #define DARWIN_LD_MINVERSION_SPEC "-macosx_version_min %(darwin_minversion)"
 
 /* Use macosx version numbers by default.  */
-#define DARWIN_DEFAULT_VERSION_TYPE  DARWIN_VERSION_MACOSX
+#define DARWIN_DEFAULT_VERSION_TYPE DARWIN_VERSION_MACOSX
 /* APPLE LOCAL end ARM 5683689 */
-/* APPLE LOCAL begin 5342595 */
-#define DARWIN_DSYMUTIL_SPEC \
-  "%{g*:%{!gstabs*:%{!g0: dsymutil %{o*:%*}%{!o:a.out}}}}"
-/* APPLE LOCAL end 5342595 */
+
+/* APPLE LOCAL ARM 5681645 */
+#define DARWIN_IPHONEOS_LIBGCC_SPEC "-lgcc_s.10.5 -lgcc"
 
 #undef SUBTARGET_EXTRA_SPECS
 #define SUBTARGET_EXTRA_SPECS                                   \
@@ -283,7 +284,7 @@ extern int flag_iasm_blocks;
   do {								\
     /* APPLE LOCAL begin ARM 5683689 */				\
     if (!darwin_macosx_version_min				\
-	&& !darwin_aspen_version_min)				\
+	&& !darwin_iphoneos_version_min)			\
       darwin_macosx_version_min = "10.1";			\
     /* APPLE LOCAL end ARM 5683689 */				\
     /* APPLE LOCAL begin CW asm blocks */			\
@@ -410,7 +411,7 @@ extern void ix86_darwin_init_expanders (void);
 /* APPLE LOCAL begin ARM 5683689 */
 #undef  TARGET_DWARF_UNINIT_VARS
 #define TARGET_DWARF_UNINIT_VARS   \
-  (darwin_aspen_version_min ||	   \
+  (darwin_iphoneos_version_min ||	   \
    strverscmp (darwin_macosx_version_min, "10.4") >= 0)
 /* APPLE LOCAL end ARM 5683689 */
 /* APPLE LOCAL end track initialization status 4964532  */

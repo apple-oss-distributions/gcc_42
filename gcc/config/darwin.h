@@ -192,7 +192,7 @@ extern GTY(()) int darwin_reverse_bitfields;
 /* APPLE LOCAL begin ARM 5683689 */
 enum darwin_version_type {
   DARWIN_VERSION_MACOSX,
-  DARWIN_VERSION_ASPEN
+  DARWIN_VERSION_IPHONEOS
 };
 /* APPLE LOCAL end ARM 5683689 */
 
@@ -208,9 +208,9 @@ enum darwin_version_type {
 	CPP_OPTION (parse_in, pascal_strings) = 1;			\
       }									\
     /* APPLE LOCAL begin ARM 5683689 */					\
-    if (darwin_macosx_version_min && darwin_aspen_version_min)		\
+    if (darwin_macosx_version_min && darwin_iphoneos_version_min)	\
       error ("-mmacosx-version-min not allowed with"			\
-             " -maspen-version-min");					\
+             " -miphoneos-version-min");				\
     /* APPLE LOCAL end ARM 5683689 */					\
     /* The c_dialect...() macros are not available to us here.  */	\
     darwin_running_cxx = (strstr (lang_hooks.name, "C++") != 0);	\
@@ -286,6 +286,10 @@ do {					\
 	flag_weak = 0;							\
 	/* No RTTI in kexts.  */					\
 	flag_rtti = 0;							\
+	/* APPLE LOCAL begin 5731065 */					\
+	if (flag_mkernel)						\
+	  flag_no_builtin = 1;						\
+	/* APPLE LOCAL end 5731065 */					\
       }									\
   } while (0)
 
@@ -326,8 +330,8 @@ do {					\
     %{!A:%{!nostdlib:%{!nostartfiles:%E}}} %{T*} %{F*} }}}}}}}}\n\
 %{!fdump=*:%{!fsyntax-only:%{!c:%{!M:%{!MM:%{!E:%{!S:\
 "/* APPLE LOCAL end mainline 4.3 2006-10-31 4370146 */"\
-"/* APPLE LOCAL ARM 5342595 */"\
-    %{.c|.cc|.C|.cpp|.cp|.c++|.cxx|.CPP|.m|.mm: %(darwin_dsymutil) }}}}}}}}"
+    %{.c|.cc|.C|.cpp|.cp|.c++|.cxx|.CPP|.m|.mm: \
+    %{g*:%{!gstabs*:%{!g0: dsymutil %{o*:%*}%{!o:a.out}}}}}}}}}}}}"
 /* APPLE LOCAL end mainline */
 
 #ifdef TARGET_SYSTEM_ROOT
@@ -389,9 +393,9 @@ do {					\
    %{Zimage_base*:-image_base %*} \
    %{Zinit*:-init %*} \
    "/* APPLE LOCAL begin ARM 5683689 */"\
-   %{!mmacosx-version-min=*: %{!maspen-version-min=*: %(darwin_ld_minversion)}} \
+   %{!mmacosx-version-min=*: %{!miphoneos-version-min=*: %(darwin_ld_minversion)}} \
    %{mmacosx-version-min=*:-macosx_version_min %*} \
-   %{maspen-version-min=*:-aspen_version_min %*} \
+   %{miphoneos-version-min=*:-iphoneos_version_min %*} \
    "/* APPLE LOCAL end ARM 5683689 */"\
    %{nomultidefs} \
    %{Zmulti_module:-multi_module} %{Zsingle_module:-single_module} \
@@ -448,8 +452,8 @@ do {					\
 #define REAL_LIBGCC_SPEC						   \
 /* APPLE LOCAL libgcc_static.a  */					   \
    "%{static:-lgcc_static; static-libgcc: -lgcc_eh -lgcc;		   \
-      "/* APPLE LOCAL ARM 5683689 */"					   \
-      maspen-version-min=*: -lgcc_s.10.5 -lgcc;				   \
+      "/* APPLE LOCAL ARM 5683689 5681645 */"				   \
+      miphoneos-version-min=*: %(darwin_iphoneos_libgcc);		   \
       shared-libgcc|fexceptions|fgnu-runtime:				   \
        %:version-compare(!> 10.5 mmacosx-version-min= -lgcc_s.10.4)	   \
        %:version-compare(>= 10.5 mmacosx-version-min= -lgcc_s.10.5)	   \
@@ -497,20 +501,20 @@ do {					\
   { "darwin_cc1_minversion", DARWIN_CC1_MINVERSION_SPEC },		\
   { "darwin_ld_minversion", DARWIN_LD_MINVERSION_SPEC },		\
 /* APPLE LOCAL end ARM 5683689 */					\
-/* APPLE LOCAL begin ARM 5342595 */					\
-  { "darwin_dsymutil", DARWIN_DSYMUTIL_SPEC },
-/* APPLE LOCAL end ARM 5342595 */
+/* APPLE LOCAL ARM 5681645 */						\
+  { "darwin_iphoneos_libgcc", DARWIN_IPHONEOS_LIBGCC_SPEC },
 
 /* APPLE LOCAL begin ARM 5683689 */
 #define DARWIN_DYLIB1_SPEC						\
-  "%{maspen-version-min=*: -ldylib1.10.5.o}				\
-   %{!maspen-version-min=*:						\
+  "%{miphoneos-version-min=*: -ldylib1.o}				\
+   %{!miphoneos-version-min=*:						\
      %:version-compare(!> 10.5 mmacosx-version-min= -ldylib1.o)		\
      %:version-compare(>= 10.5 mmacosx-version-min= -ldylib1.10.5.o)}"
 
 #define DARWIN_CRT1_SPEC						\
-  "%{maspen-version-min=*: -lcrt1.10.5.o}				\
-   %{!maspen-version-min=*:						\
+/* APPLE LOCAL ARM 5823776 iphoneos should use crt1.o */		\
+  "%{miphoneos-version-min=*: -lcrt1.o}					\
+   %{!miphoneos-version-min=*:						\
      %:version-compare(!> 10.5 mmacosx-version-min= -lcrt1.o)		\
      %:version-compare(>= 10.5 mmacosx-version-min= -lcrt1.10.5.o)}"
 /* APPLE LOCAL end ARM 5683689 */
@@ -723,14 +727,14 @@ do {					\
            }                                                            \
          /* APPLE LOCAL end radar 2848255 */                            \
 	/* APPLE LOCAL begin 5660282 */					\
-	if (darwin_aspen_version_min && flag_objc_gc)			\
+	if (darwin_iphoneos_version_min && flag_objc_gc)		\
 	  {								\
-	    warning (0, "-fobjc-gc not supported for Aspen; ignoring.");\
+	    warning (0, "-fobjc-gc not supported for iPhone OS; ignoring.");\
 	    flag_objc_gc = 0;						\
 	  }								\
-	if (darwin_aspen_version_min && flag_objc_gc_only)		\
+	if (darwin_iphoneos_version_min && flag_objc_gc_only)		\
 	  {								\
-	    warning (0, "-fobjc-gc-only not supported for Aspen; ignoring.");\
+	    warning (0, "-fobjc-gc-only not supported for iPhone OS; ignoring.");\
 	    flag_objc_gc_only = 0;					\
 	  }								\
 	/* APPLE LOCAL end 5660282 */					\
@@ -845,7 +849,8 @@ do {					\
        else if (!strncmp (xname, ".objc_class_name_", 17))		     \
 	 fprintf (FILE, "%s", xname);					     \
        else if (xname[0] != '"' && name_needs_quotes (xname))		     \
-	 fprintf (FILE, "\"%s\"", xname);				     \
+	 /* APPLE LOCAL 5782111 */					     \
+	 asm_fprintf (FILE, "\"%U%s\"", xname);				     \
        else								     \
          asm_fprintf (FILE, "%U%s", xname);				     \
   } while (0)
@@ -1051,32 +1056,40 @@ enum machopic_addr_class {
       }								\
   } while (0)
 
+/* APPLE LOCAL begin ARM 5603763 */
+/* Given a symbol name, remove quotes, prefix it with "L", suffix it
+   with SUFFIX, and re-apply quotes if needed.  */
+
+#define GEN_SUFFIXED_NAME_FOR_SYMBOL(BUF,SYMBOL,SYMBOL_LENGTH,SUFFIX)	\
+  do {									\
+    const char *symbol_ = (SYMBOL);					\
+    char *buffer_ = (BUF);						\
+    if (symbol_[0] == '"')						\
+      {									\
+        strcpy (buffer_, "\"L");					\
+        strcpy (buffer_ + 2, symbol_ + 1);				\
+	strcpy (buffer_ + (SYMBOL_LENGTH), SUFFIX "\"");		\
+      }									\
+    else if (name_needs_quotes (symbol_))				\
+      {									\
+        strcpy (buffer_, "\"L");					\
+        strcpy (buffer_ + 2, symbol_);					\
+	strcpy (buffer_ + (SYMBOL_LENGTH) + 2, SUFFIX "\"");		\
+      }									\
+    else								\
+      {									\
+        strcpy (buffer_, "L");						\
+        strcpy (buffer_ + 1, symbol_);					\
+	strcpy (buffer_ + (SYMBOL_LENGTH) + 1, SUFFIX);			\
+      }									\
+  } while (0)
+
 /* Given a symbol name string, create the lazy pointer version
    of the symbol name.  */
 
 #define GEN_LAZY_PTR_NAME_FOR_SYMBOL(BUF,SYMBOL,SYMBOL_LENGTH)	\
-  do {								\
-    const char *symbol_ = (SYMBOL);                             \
-    char *buffer_ = (BUF);					\
-    if (symbol_[0] == '"')					\
-      {								\
-        strcpy (buffer_, "\"L");				\
-        strcpy (buffer_ + 2, symbol_ + 1);			\
-	strcpy (buffer_ + (SYMBOL_LENGTH), "$lazy_ptr\"");	\
-      }								\
-    else if (name_needs_quotes (symbol_))			\
-      {								\
-        strcpy (buffer_, "\"L");				\
-        strcpy (buffer_ + 2, symbol_);				\
-	strcpy (buffer_ + (SYMBOL_LENGTH) + 2, "$lazy_ptr\"");	\
-      }								\
-    else							\
-      {								\
-        strcpy (buffer_, "L");					\
-        strcpy (buffer_ + 1, symbol_);				\
-	strcpy (buffer_ + (SYMBOL_LENGTH) + 1, "$lazy_ptr");	\
-      }								\
-  } while (0)
+  GEN_SUFFIXED_NAME_FOR_SYMBOL (BUF, SYMBOL, SYMBOL_LENGTH, "$lazy_ptr")
+/* APPLE LOCAL end ARM 5603763 */
 
 #define EH_FRAME_SECTION_NAME   "__TEXT"
 #define EH_FRAME_SECTION_ATTR ",coalesced,no_toc+strip_static_syms+live_support"

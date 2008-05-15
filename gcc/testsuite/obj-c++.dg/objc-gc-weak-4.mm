@@ -3,6 +3,7 @@
 /* Test enhanced for radar 5276085 to test weak array of ivars. */
 /* { dg-do run { target powerpc*-*-darwin* i?86*-*-darwin* } } */
 /* { dg-options "-framework Foundation -fobjc-gc" } */
+/* { dg-require-effective-target objc_gc } */
 
 // Weak Write Barriers
 

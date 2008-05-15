@@ -4,6 +4,8 @@
 /* { dg-do compile { target *-*-darwin* } } */
 /* APPLE LOCAL radar 4899595 */
 /* { dg-options "-mmacosx-version-min=10.5" } */
+/* Cocoa not available on arm-darwin targets */
+/* { dg-skip-if "" { arm*-*-darwin* } { "*" } { "" } } */
 #import <Cocoa/Cocoa.h>
 
 @interface NSWindow (Properties)

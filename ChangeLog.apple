@@ -1,3 +1,14 @@
+2008-05-09  Josh Conner  <jconner@apple.com>
+
+	Radar 5925341
+	* build_libgcc (TRANSLATE_ARCH): Add s/armv6/arm/.
+
+2008-04-15  Josh Conner  <jconner@apple.com>
+
+	Radar 5866354
+	* build_gcc: Translate armv6->arm in HOSTS and TARGETS.  Also,
+	don't try to build libgomp for ARM.
+
 2008-02-07  Josh Conner  <jconner@apple.com>
 
 	Radar 5730761

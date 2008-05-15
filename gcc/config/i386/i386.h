@@ -440,6 +440,14 @@ extern const char *host_detect_local_cpu (int argc, const char **argv);
       if (TARGET_SSSE3)						\
 	builtin_define ("__SSSE3__");				\
       /* APPLE LOCAL end mainline */				\
+      /* APPLE LOCAL begin 5612787 mainline sse4 */			\
+      if (TARGET_SSE4_1)					\
+	builtin_define ("__SSE4_1__");				\
+      if (TARGET_SSE4_2)					\
+	builtin_define ("__SSE4_2__");				\
+      if (TARGET_SSE4A)						\
+ 	builtin_define ("__SSE4A__");		                \
+      /* APPLE LOCAL end 5612787 mainline sse4 */			\
       if (TARGET_SSE_MATH && TARGET_SSE)			\
 	builtin_define ("__SSE_MATH__");			\
       if (TARGET_SSE_MATH && TARGET_SSE2)			\
@@ -675,9 +683,7 @@ extern const char *host_detect_local_cpu (int argc, const char **argv);
 #define BIGGEST_FIELD_ALIGNMENT 32
 #endif
 #else
-/* APPLE LOCAL begin mainline 2006-10-31 PR 23067, radar 4869885 */
 #define ADJUST_FIELD_ALIGN(FIELD, COMPUTED) \
-/* APPLE LOCAL end mainline 2006-10-31 PR 23067, radar 4869885 */ \
    x86_field_alignment (FIELD, COMPUTED)
 #endif
 
@@ -1135,6 +1141,8 @@ enum reg_class
   GENERAL_REGS,			/* %eax %ebx %ecx %edx %esi %edi %ebp %esp %r8 - %r15*/
   FP_TOP_REG, FP_SECOND_REG,	/* %st(0) %st(1) */
   FLOAT_REGS,
+  /* APPLE LOCAL 5612787 mainline sse4 */
+  SSE_FIRST_REG,
   SSE_REGS,
   MMX_REGS,
   FP_TOP_SSE_REGS,
@@ -1181,6 +1189,8 @@ enum reg_class
    "GENERAL_REGS",			\
    "FP_TOP_REG", "FP_SECOND_REG",	\
    "FLOAT_REGS",			\
+    /* APPLE LOCAL 5612787 mainline sse4 */	\
+   "SSE_FIRST_REG",			\
    "SSE_REGS",				\
    "MMX_REGS",				\
    "FP_TOP_SSE_REGS",			\
@@ -1208,6 +1218,8 @@ enum reg_class
   { 0x1100ff,  0x1fe0 },		/* GENERAL_REGS */		\
      { 0x100,     0x0 }, { 0x0200, 0x0 },/* FP_TOP_REG, FP_SECOND_REG */\
     { 0xff00,     0x0 },		/* FLOAT_REGS */		\
+/* APPLE LOCAL 5612787 mainline sse4 */						\
+  { 0x200000,     0x0 },		/* SSE_FIRST_REG */		\
 { 0x1fe00000,0x1fe000 },		/* SSE_REGS */			\
 { 0xe0000000,    0x1f },		/* MMX_REGS */			\
 { 0x1fe00100,0x1fe000 },		/* FP_TOP_SSE_REG */		\

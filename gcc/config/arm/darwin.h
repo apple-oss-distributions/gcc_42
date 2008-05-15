@@ -28,7 +28,7 @@
 
 #undef CC1_SPEC
 #define CC1_SPEC "%<faltivec %<mcpu=G4 %<mcpu=G5 \
-%{!mmacosx-version-min=*: %{!maspen-version-min=*: %(darwin_cc1_minversion)}} \
+%{!mmacosx-version-min=*: %{!miphoneos-version-min=*: %(darwin_cc1_minversion)}} \
 %{static: %{Zdynamic: %e conflicting code gen style switches are used}} \
 %{static: %{mdynamic-no-pic: %e conflicting code gen style switches are used}} \
 %{!static:%{!mdynamic-no-pic:-fPIC}} \
@@ -213,19 +213,18 @@
    mcpu=arm1176jzf-s:armv6;			\
    :arm -force_cpusubtype_ALL}"
 
-#define DARWIN_MINVERSION_SPEC "1.2"
+#define DARWIN_MINVERSION_SPEC "2.0"
 
 /* Default cc1 option for specifying minimum version number.  */
-#define DARWIN_CC1_MINVERSION_SPEC "-maspen-version-min=%(darwin_minversion)"
+#define DARWIN_CC1_MINVERSION_SPEC "-miphoneos-version-min=%(darwin_minversion)"
 
 /* Default ld option for specifying minimum version number.  */
-#define DARWIN_LD_MINVERSION_SPEC "-aspen_version_min %(darwin_minversion)"
+#define DARWIN_LD_MINVERSION_SPEC "-iphoneos_version_min %(darwin_minversion)"
 
-/* Use Aspen version numbers by default.  */
-#define DARWIN_DEFAULT_VERSION_TYPE DARWIN_VERSION_ASPEN
+/* Use iPhone OS version numbers by default.  */
+#define DARWIN_DEFAULT_VERSION_TYPE  DARWIN_VERSION_IPHONEOS
 
-#define DARWIN_DSYMUTIL_SPEC \
-  "%{gdwarf*: dsymutil %{o*:%*}%{!o:a.out}}"
+#define DARWIN_IPHONEOS_LIBGCC_SPEC "-lgcc_s.1 -lgcc"
 
 #undef SUBTARGET_EXTRA_SPECS
 #define SUBTARGET_EXTRA_SPECS			\
@@ -240,8 +239,8 @@
 do {									\
   if (1)								\
   {									\
-    if (!darwin_macosx_version_min && !darwin_aspen_version_min)	\
-      darwin_aspen_version_min = "1.2";					\
+    if (!darwin_macosx_version_min && !darwin_iphoneos_version_min)	\
+      darwin_iphoneos_version_min = "2.0";				\
     if (MACHO_DYNAMIC_NO_PIC_P)						\
       {									\
         if (flag_pic)							\
@@ -256,6 +255,8 @@ do {									\
       }									\
     /* Remove when ld64 generates stubs for us. */			\
     darwin_stubs = true;						\
+    if (profile_flag)							\
+      error ("function profiling not supported on this target");	\
   }									\
 } while(0)
 
@@ -326,9 +327,6 @@ do {									\
     && (flag_pic || MACHO_DYNAMIC_NO_PIC_P)		\
     && (MODE == SFmode || MODE == DFmode)) ? 1 : 0)
 
-/* Until dyld supports aligned commons... */
-#undef ASM_OUTPUT_ALIGNED_COMMON
-
 /* Adjust inlining parameters.  */
 #undef SUBTARGET_OPTIMIZATION_OPTIONS
 #define SUBTARGET_OPTIMIZATION_OPTIONS			\
@@ -347,10 +345,6 @@ do {									\
 /* Remove limit for -Os */
 #undef MAX_CONDITIONAL_EXECUTE
 #define MAX_CONDITIONAL_EXECUTE	(optimize_size ? INT_MAX : (BRANCH_COST + 1))
-
-/* Use stabs for now */
-#undef PREFERRED_DEBUGGING_TYPE
-#define PREFERRED_DEBUGGING_TYPE DBX_DEBUG
 
 #undef TARGET_IASM_OP_CONSTRAINT
 #define TARGET_IASM_OP_CONSTRAINT	\

@@ -3,6 +3,7 @@
    API when struct has a 'strong' object pointer in a variety of situations. */
 /* { dg-options "-fobjc-gc -mmacosx-version-min=10.5 -framework Cocoa" } */
 /* { dg-do run { target *-*-darwin* } } */
+/* { dg-require-effective-target objc_gc } */
 
 #define objc_copyStruct X_objc_copyStruct
 #define objc_memmove_collectable X_objc_memmove_collectable

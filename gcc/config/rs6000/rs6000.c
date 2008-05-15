@@ -156,6 +156,10 @@ struct rs6000_cpu_select rs6000_select[3] =
   { (const char *)0,	"-mtune=",		1,	0 },
 };
 
+/* APPLE LOCAL begin 5774356 */
+static int debug_sp_offset = 0;
+static int debug_vrsave_offset = 0;
+/* APPLE LOCAL end 5774356 */
 /* Always emit branch hint bits.  */
 static GTY(()) bool rs6000_always_hint;
 
@@ -1198,7 +1202,7 @@ darwin_rs6000_override_options (void)
   TARGET_ALTIVEC_VRSAVE = 1;
 
   /* APPLE LOCAL begin ARM 5683689 */
-  if (!darwin_macosx_version_min && !darwin_aspen_version_min)
+  if (!darwin_macosx_version_min && !darwin_iphoneos_version_min)
     darwin_macosx_version_min = "10.1";
   /* APPLE LOCAL end ARM 5683689 */
 
@@ -1206,7 +1210,7 @@ darwin_rs6000_override_options (void)
   /* APPLE LOCAL begin constant cfstrings */
   if (darwin_constant_cfstrings < 0)
     darwin_constant_cfstrings = 
-      darwin_aspen_version_min
+      darwin_iphoneos_version_min
       || (strverscmp (darwin_macosx_version_min, "10.2") >= 0);
   /* APPLE LOCAL end constant cfstrings */
   /* APPLE LOCAL end ARM 5683689 */
@@ -1234,10 +1238,10 @@ darwin_rs6000_override_options (void)
       warning (0, "-m64 requires PowerPC64 architecture, enabling");
     }
   if (flag_mkernel)
-    {
-      rs6000_default_long_calls = 1;
-      target_flags |= MASK_SOFT_FLOAT;
-    }
+    /* APPLE LOCAL begin 5731065 */
+    /* Moved setting of SOFT_FLOAT into rs6000_handle_option.  */
+    rs6000_default_long_calls = 1;
+    /* APPLE LOCAL end 5731065 */
 
   /* Make -m64 imply -maltivec.  Darwin's 64-bit ABI includes
      Altivec.  */
@@ -1485,8 +1489,10 @@ rs6000_override_options (const char *default_cpu)
 	{
 	  flag_disable_opts_for_faltivec = 1;
 	  /* APPLE LOCAL radar 4161346 */
-	  target_flags |= (MASK_ALTIVEC | MASK_PIM_ALTIVEC);
+	  target_flags |= MASK_ALTIVEC;
 	}
+      /* APPLE LOCAL radar 5822514 */
+      target_flags |= MASK_PIM_ALTIVEC;
     }
   /* APPLE LOCAL end AltiVec */
 
@@ -2345,6 +2351,13 @@ rs6000_handle_option (size_t code, const char *arg, int value)
 	  return false;
 	}
       break;
+      /* APPLE LOCAL begin 5731065 */
+    case OPT_mkernel:
+      /* Set this early so that a kext that wants to use the hard
+	 floating point registers can use -mkernel -mhard-float.  */
+      target_flags |= MASK_SOFT_FLOAT;
+      break;
+      /* APPLE LOCAL end 5731065 */
     }
   return true;
 }
@@ -9294,7 +9307,11 @@ rs6000_expand_builtin (tree exp, rtx target, rtx subtarget ATTRIBUTE_UNUSED,
     if (d->code == fcode)
       return rs6000_expand_ternop_builtin (d->icode, arglist, target);
 
-  gcc_unreachable ();
+  /* APPLE LOCAL begin 5774356 */
+  /* It looks like a builtin call, but there is something wrong;
+     maybe the wrong number of arguments.  Return failure.  */
+  return NULL_RTX;
+  /* APPLE LOCAL end 5774356 */
 }
 
 static tree
@@ -17112,6 +17129,10 @@ rs6000_emit_prologue (void)
         {
           /* Save VRSAVE.  */
           offset = info->vrsave_save_offset + sp_offset;
+	  /* APPLE LOCAL begin 5774356 */
+	  debug_vrsave_offset = offset;
+	  debug_sp_offset = sp_offset;
+	  /* APPLE LOCAL end 5774356 */
           mem = gen_frame_mem (SImode,
                                gen_rtx_PLUS (Pmode, frame_reg_rtx,
                                              GEN_INT (offset)));
@@ -17415,7 +17436,10 @@ rs6000_emit_epilogue (int sibcall)
 
   /* APPLE LOCAL begin mainline */
   /* Set sp_offset based on the stack push from the prologue.  */
-  if ((DEFAULT_ABI == ABI_V4 || current_function_calls_eh_return)
+  /* APPLE LOCAL begin 5774356 */
+  if (info->push_p
+      && (DEFAULT_ABI == ABI_V4 || DEFAULT_ABI == ABI_DARWIN || current_function_calls_eh_return)
+      /* APPLE LOCAL end 5664356 */
       && info->total_size < 32767)
 	sp_offset = info->total_size;
 
@@ -17449,6 +17473,10 @@ rs6000_emit_epilogue (int sibcall)
     {
       rtx addr, mem, reg;
 
+      /* APPLE LOCAL begin 5774356 */
+      gcc_assert (debug_sp_offset == sp_offset);
+      gcc_assert (debug_vrsave_offset == (info->vrsave_save_offset + sp_offset));
+      /* APPLE LOCAL end 5774356 */
       addr = gen_rtx_PLUS (Pmode, frame_reg_rtx,
 			   GEN_INT (info->vrsave_save_offset + sp_offset));
       mem = gen_frame_mem (SImode, addr);

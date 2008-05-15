@@ -5763,7 +5763,15 @@ instantiate_class_template (tree type)
   if (CLASSTYPE_VISIBILITY_SPECIFIED (pattern))
     {
       CLASSTYPE_VISIBILITY_SPECIFIED (type) = 1;
-      CLASSTYPE_VISIBILITY (type) = CLASSTYPE_VISIBILITY (pattern);
+      /* APPLE LOCAL begin 5812195 */
+      /* CLASSTYPE_VISIBILITY (type) should already be set by the time
+	 we get here, in particular, we should just constrain the
+	 visibility, as we don't reconstrain on template arguments
+	 post this whereas we've already done that by the time we get
+	 here.  */
+      if (CLASSTYPE_VISIBILITY (type) < CLASSTYPE_VISIBILITY (pattern))
+	CLASSTYPE_VISIBILITY (type) = CLASSTYPE_VISIBILITY (pattern);
+      /* APPLE LOCAL end 5812195 */
     }
 
   pbinfo = TYPE_BINFO (pattern);

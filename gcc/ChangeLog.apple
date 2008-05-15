@@ -1,3 +1,886 @@
+2008-05-15  Josh Conner  <jconner@apple.com>
+
+	Radar 5938756
+	* dwarf2out.c (modified_type_die): Verify that
+	TREE_TYPE (TYPE_NAME (type)) is non-null before using it.
+
+2008-05-14  Stuart Hastings  <stuart@apple.com>
+
+	Radar 5774356
+	* config/rs6000/rs6000.c (debug_sp_offset,
+	debug_vrsave_offset): New.  (rs6000_expand_builtin): Return 0
+	when nothing matches.  (rs6000_expand_prologue): Revise
+	sp_offset computation, set debug_sp_offset and
+	debug_vrsave_offset.  (rs6000_expand_epilogue): Test
+	debug_sp_offset and debug_vrsave_offset.
+	* testsuite/gcc.apple/5774356.c: New.
+
+2008-05-12  Stuart Hastings  <stuart@apple.com>
+
+	* tree-ssa.c (tree_ssa_useless_type_conversion_1): Moved APPLE
+          LOCAL.
+
+2008-05-09  Stuart Hastings  <stuart@apple.com>
+
+	Radar 5799099
+	* tree-ssa.c (tree_ssa_useless_type_conversion_1): Moved
+          cast-into-void* check after checks for losing volatile or
+          const.
+	* testsuite/gcc.apple/5799099.c: New.
+
+2008-05-09  Caroline Tice  <ctice@apple.com
+
+        Radar 5839812
+       * objc/objc-act.c  (objc_synthesize_new_getter):  Temporarily set
+       input_location to be the location of the '@synthesize' statement
+       while the new getter method is synthesized; re-set it to its original
+       value afterwards.
+       (objc_syntehsize_new_setter):  Likewise.
+
+2008-05-6  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 5914395
+        * config/darwin-c.c (darwin_cpp_builtins): Define __OBJC_GC__ for
+        -fobjc-gc-only option as well.
+
+2008-05-06  Jim Grosbach <grosbach@apple.com>
+
+	Radar 5880719
+	Merge from 4.0
+	* combine.c:  Add parameter to try_combine declaration.
+	(COMBINE_TRY_RETAIN):  Define, if not already.
+	(try_combine):  Add new parameter.  If we had to add copies
+	of the original input(s) because their value(s) are used later,
+	and the resulting pattern does not match, try matching the
+	replacement without those copie(s) and leaving the original(s)
+	alone.
+	(combine_instructions): Adjust calls to try_combine.
+	(combine_validate_cost): Allow i2 to be 0.  In retain_inputs
+	case, accept replacement when it is equal to original, not
+	necessarily a strict improvement.
+	* config/arm/arm.c (arm_size_rtx_costs): Adjust cost of DImode MULT.
+	* config/arm/arm.md (muldi3, *soft_muldi3):  New.
+	* config/arm/cirrus.md (muldi3):  Rename to cirrus_muldi3.
+
+2008-05-02  Josh Conner  <jconner@apple.com>
+
+	Radar 5905142
+	* doc/invoke.texi: Add documentation for
+	MACOSX_DEPLOYMENT_TARGET and IPHONEOS_DEPLOYMENT_TARGET.
+
+2008-05-02  Jim Grosbach <grosbach@apple.com>
+
+	Radar 5903944
+	* config/arm/arm.h (ASM_OUTPUT_ADDR_DIFF_VEC): Add missing
+	parentheses.
+
+2008-05-01  Caroline Tice  <ctice@apple.com>
+
+	Radar 5741731
+	* dwarf2out.c (c-common.h): New include statement.
+	(modified_type_die):  Temporarily remove volatile attribute, if it
+        was added because of objective '@try' block.
+
+2008-04-30  Josh Conner  <jconner@apple.com>
+
+	Radar 5702478
+	* config/rs6000/rs6000.c (rs6000_override_options): Always
+	set TARGET_PIM_ALTIVEC if rs6000_altivec_pim is given.
+
+2008-04-29  Josh Conner  <jconner@apple.com>
+
+	Radar 5866634
+	* cse.c (insert): Balance parentheses across #ifdefs.
+
+2008-04-29  Josh Conner  <jconner@apple.com>
+
+	Radar 5866634
+	* cse.c (insert): Lower cost of SP+const addresses.
+
+2008-04-28  Josh Conner  <jconner@apple.com>
+
+	Radar 5883867
+	* config.gcc (arm*-*-darwin*): Clear extra_headers.
+
+2008-04-16  Jim Grosbach <grosbach@apple.com>
+
+	Radar 5837498
+	* config/arm/arm.h (ASM_OUTPUT_ADDR_DIFF_VEC): Use assembler
+	expression to calculate (L1-L2)/2 rather than relying on insn
+	length attributes.
+
+2008-04-22  Josh Conner  <jconner@apple.com>
+
+	Radar 5840600
+	* common.opt (flocal-alloc): New command-line option and
+	corresponding variable, flag_local_alloc...
+	* local-alloc.c (block_alloc): ...use it.
+	* config/arm/arm.c (optimization_options): ...disable it by
+	default.
+	* doc/invoke.texi: Add -flocal-alloc documentation.
+
+2008-04-16  Jim Grosbach <grosbach@apple.com>
+
+ 	Radar 5831562
+ 	Merge from 4.0
+	* global.c (TIE_PSEUDOS): New macro.
+	(empty_reg_set): New variable.
+	(find_reg): Adjust heuristics of propagating preferences and
+	pseudo-pseudo ties after a reg is selected.
+	(set_preference): Allow for vector/nonvector SUBREGS.  Use
+	TIE_PSEUDOS.
+	* config/arm/arm.h (TIE_PSEUDOS): Define.
+
+e008-04-15  Josh Conner  <jconner@apple.com>
+
+	Radar 5866711
+	* config/darwin.h (DARWIN_DYLIB1_SPEC): When
+	-miphoneos-version-min is seen, use dylib1.o.
+
+2008-04-15  Josh Conner  <jconner@apple.com>
+
+	Radar 5866354
+	* config.host (*-darwin*): Add DARWIN_PCH_ADDR_SPACE_SIZE to
+	host_xm_defines.
+	* config/host-darwin.c (pch_address_space): Use
+	DARWIN_PCH_ADDR_SPACE_SIZE to determine size.
+	* config/arm/x-darwin: New file.
+	* config/arm/host-arm-darwin.c: New file.
+
+2008-04-15  Jim Grosbach <grosbach@apple.com>
+
+ 	Radar 5831562
+ 	Merge from 4.0
+	* expr.c (expand_expr_real_1) (CONVERT_EXPR):
+	Improve codegen for (int)(long long >> 32).
+
+2008-04-11  Jim Grosbach <grosbach@apple.com>
+
+ 	Radar 5831562
+ 	Merge from 4.0
+	* config/arm/arm.c (const64_ok_for_arm_add,
+	const64_ok_for_arm_immediate):  New.
+	* config/arm/arm-protos.h:  Prototype them.
+	* config/arm/predicates.md (arm_immediate64_operand,
+	arm_rhs64_operand, arm_add_immediate64_operand,
+	arm_add64_operand):  New.
+	* config/arm/constraints.md:  Add 'Dd'.
+	* config/arm/arm.md (adddi3, *arm_adddi3, unnamed define_split
+	for logical binary operators, anddi3, iordi3, xordi3): Accept
+	64-bit constants that match 'Dd' constraint.
+	(adddi3): Allow negative constants whose negation is in-range
+	for SUB; generate SUB for these.
+	(subdi3): Allow constants either in-range for SUB, or whose
+	negation is in-range for ADD.  Generate ADD for the latter.
+	(*arm_adddi3, *arm_subdi3): Allow constants.
+
+2008-04-11  Josh Conner  <jconner@apple.com>
+
+	Radar 5840278 - part 2
+	* (analyze_leg): Cast TREE_INT_CST_HIGH to unsigned.
+
+2008-04-10  Josh Conner  <jconner@apple.com>
+
+	Radar 5854251
+	* config/arm/libgcc-iphoneos.ver: Remove __switch* functions.
+
+2008-04-09  Jim Grosbach <grosbach@apple.com>
+
+	Radar 5831562
+	Merge from 4.0
+	* local-alloc.c (find_free_reg): Use DIMODE_REG_ALLOC_ORDER, if
+	defined.
+	* regclass.c (dimode_reg_alloc_order,
+	dimode_inv_reg_alloc_order): New variables.
+	(init_reg_sets): Use DIMODE_REG_ALLOC_ORDER, if defined.
+	* global.c (find_reg): Use DIMODE_REG_ALLOC_ORDER, if defined.
+	* hard-reg-set.h (dimode_reg_alloc_order,
+	dimode_inv_reg_alloc_order): New declarations.
+	* config/arm/arm.h (IMODE_REG_ALLOC_ORDER): New macro.
+	(COMBINE_TRY_RETAIN): New macro.
+	* recog.c (peep2_find_free_register): Use
+	DIMODE_REG_ALLOC_ORDER, if defined.
+	* reload1.c (find_reg): Likewise.
+
+2008-04-09  Josh Conner  <jconner@apple.com>
+
+	Radar 5851089
+	* config/arm/arm.md (insv): Enable for Thumb.
+
+2008-04-09  Josh Conner  <jconner@apple.com>
+
+	Radar 5847848
+	* ifcvt.c (cond_exec_process_insns): Don't stop
+	conditionalization at a compare for TARGET_ARM.
+	(cond_exec_branch_targets_equiv): New function.
+	(cond_exec_process_if_block): Allow for null then_bb,
+	indicating merging of multiple && or || blocks only.
+	(process_if_block):  Ditto.
+	(find_if_block):  Ditto.
+	* config/arm/arm.c (arm_ifcvt_modify_multiple_tests): New
+	function.
+	* config/arm/arm.h (IFCVT_MODIFY_MULTIPLE_TESTS): New define.
+	* config/arm/arm-protos.h (arm_ifcvt_modify_multiple_tests):
+	New proto.
+	* config/arm/arm.md (*arm_cmpsi_insn):  Mark predicable.
+
+2008-04-03  Josh Conner  <jconner@apple.com>
+
+	Radar 5840278
+	* expr.c (look_for_bytemanip): New function...
+	(expand_expr_real_1): ...use it.
+	(struct bytemanip): New type.
+	(bswap32_shift_first): New variable.
+	(bswap32_and_first): New variable.
+	(bswap64_shift_first): New variable.
+	(bswap64_and_first): New variable.
+	(uxtb16_shift_first): New variable.
+	(uxtb16_and_first): New variable.
+	(find_and_record_values): New function.
+	(analyze_leg): New function.
+	* config/arm/arm.md (bswapsi2): New expand.
+	(arm_bswapsi2): New insn.
+	(thumb_bswapsi2): New insn.
+	(bswapdir2): New expand.
+	(arm_bswapdi2): New insn.
+	(thumb_bswapdi2): New insn.
+	(uxtb16): New insn.
+
+2008-04-03  Josh Conner  <jconner@apple.com>
+
+	Radar 5835816
+	* config/arm/arm.md (arm_andsi3_insn): Remove non-immediate
+	operand permutation.  Change from a define_insn_and_split to a
+	define_insn.
+	(arm_iorsi3): Likewise.
+
+2008-04-02  Jim Grosbach <grosbach@apple.com>
+
+	Radar 5831528
+	* ifcvt.c (cond_exec_process_insns): Don't conditionally
+	execute calls with a NORETURN note attached.
+	* config/arm/arm.md (call_reg_armv6, call_reg_arm, call_mem,
+	call_value_reg_armv5, call_value_reg_arm, call_value_mem):
+	Make predicable.
+	(call_symbol_predicable): New.
+	(call_value_symbol_predicable): New.
+	(call_symbol): Only match for TARGET_INTERWORK.
+	(call_value_symbol): Likewise.
+
+2008-04-01  Josh Conner  <jconner@apple.com>
+
+	Radar 5829269
+	* config/arm/arm.md (define_split 64-bit constants): Always
+	split 64-bit constants when generating Thumb code.
+
+2008-04-01  Fariborz Jahanian <fjahanian@apple.com>
+
+	Radar 5344182
+	* dwarf2out.c (add_prototyped_attribute): Check for objc as
+	the language to generate DW_AT_prototyped dwarf attr.
+
+2008-04-01  Josh Conner  <jconner@apple.com>
+
+	Radar 5829297
+	* config/arm/arm.c (thumb_size_rtx_costs): New function...
+	(arm_size_rtx_costs): ...Use it.
+
+2008-03-31  Jim Grosbach <grosbach@apple.com>
+
+	Radar 5819088
+	* cfglayout.c (duplicate_insn_chain): Add missing case to
+	copy NOTE_INSN_ALLOCA notes.
+
+2008-03-31  Stuart Hastings  <stuart@apple.com>
+
+	Radar 5814283
+	* gcc/testsuite/gcc.apple/5814283.c: Tweaked to test on x86
+	  only.
+
+2008-03-28  Jim Grosbach <grosbach@apple.com>
+
+	Radar 5823776
+	* config/darwin.h: Use crt1.o if iphoneos-version-min is
+	specified
+
+2008-03-27  Stuart Hastings  <stuart@apple.com>
+
+	Radar 5814283
+	* config/i386/emmintrin.h (_mm_shuffle_pd,
+	  _mm_shufflehi_epi16, _mm_shufflelo_epi16,
+	  _mm_shuffle_epi32): Insert missing parens.
+	* config/i386/tmmintrin.h (_mm_alignr_epi8): Insert missing
+	  parens.
+	* testsuite/gcc.apple/5814283.c: New.
+
+2008-03-24  Josh Conner  <jconner@apple.com>
+
+	Radar 5777572 - take 2 (cont.)
+	* config/darwin.h (LINK_SPEC): Change -iphone_version_min to
+	-iphoneos_version_min.
+	* config/arm/darwin.h (DARWIN_LD_MINVERSION_SPEC): Likewise.
+
+2008-03-24  Josh Conner  <jconner@apple.com>
+
+	Radar 5819018
+	* config/darwin-driver.c (darwin_default_min_version): Don't
+	warn if both MACOSX_DEPLOYMENT_TARGET and
+	IPHONEOS_DEPLOYMENT_TARGET are set.
+
+2008-03-24  Josh Conner  <jconner@apple.com>
+
+	Radar 4382996
+	* config/arm/predicates.md (binary_cc_noclobber_operator): New
+	special_predicate.
+	* config/arm/arm.md (arm_binary_ne_0) New define_insn_and_split.
+	(arm_add_ne_0): Likewise.
+	(arm_mul_ne_0): Likewise.
+
+2008-03-24  Stuart Hastings  <stuart@apple.com>
+
+	Radar 5612787
+	* testsuite/lib/target-supports.exp
+	  (check_no_compiler_messages, check_no_messages_and_pattern):
+	  Remove redundant definitions.
+
+2008-03-24  Josh Conner  <jconner@apple.com>
+
+	Radar 4826373
+	* config/arm/darwin.h (ASM_OUTPUT_ALIGNED_COMMON): Remove
+	undef.
+
+2008-03-20  Fariborz Jahanian <fjahanian@apple.com>
+
+	Radar 5802025
+	* c-common.h (objc_build_property_getter_func_call): New decl.
+	* stub-objc.c (objc_build_property_getter_func_call): New stub.
+
+2008-03-19  Bill Wendling  <wendling@apple.com>
+
+	Radar 5571540
+	* config/i386/i386.c (output_pic_addr_const): darwin_stubs flag
+	is only available on Mach-O systems.
+
+2008-03-17  Josh Conner  <jconner@apple.com>
+
+	Radar 5619587 (Reverts 5342595)
+	* config/i386/darwin.h (DARWIN_DSYMUTIL_SPEC): Remove
+	definition.
+	* config/rs6000/darwin.h (DARWIN_DSYMUTIL_SPEC): Likewise.
+	* config/arm/darwin.h (DARWIN_DSYMUTIL_SPEC): Likewise.
+	(PREFERRED_DEBUGGING_TYPE): Remove definition.
+	* config/darwin.h (LINK_COMMAND_SPEC): Replace darwin_dsymutil
+	spec invocation with string.
+	(darwin_dsymutil): Remove spec definition.
+
+2008-03-15  Josh Conner  <jconner@apple.com>
+
+	Radar 5777572 - take 2
+	* config.gcc: Replace all instances of 'iphone' with 'iphoneos'.
+	* config/darwin-c.c: Likewise.
+	* config/darwin.opt: Likewise.
+	* config/i386/darwin.h: Likewise.
+	* config/rs6000/darwin.h: Likewise.
+	* config/rs6000/rs6000.c: Likewise.
+	* config/darwin.h: Likewise.
+	* config/arm/darwin.h: Likewise.
+	* config/darwin-driver.c: Likewise.
+	* config/arm/t-slibgcc-iphone: Rename to...
+	* config/arm/t-slibgcc-iphoneos: ...new file.
+	* config/arm/libgcc-iphone.ver: Rename to...
+	* config/arm/libgcc-iphoneos.ver: ...new file.
+
+2008-03-14  Josh Conner  <jconner@apple.com>
+
+	Radar 5641084
+	* config/arm/darwin.h (SUBTARGET_OVERRIDE_OPTIONS): Err on -pg.
+
+2008-03-13  Jim Grosbach  <grosbach@apple.com>
+
+	Radar 5798689
+	* testsuite/gcc.dg/sibcall-3.c: Skip test for thumb
+	* testsuite/gcc.dg/sibcall-4.c: Likewise
+
+2008-03-13  Josh Conner  <jconner@apple.com>
+
+	Undo Radar 5730079
+	* config/i386/darwin.h (DARWIN_ALLOWED_VERSION_TYPES): Remove
+	definition.
+	* config/rs6000/darwin.h (CC1_SPEC): Don't err on
+	-miphone-version-min.
+	(DARWIN_ALLOWED_VERSION_TYPES): Remove definition.
+	* config/darwin.h (DARWIN_VERSION_MACOSX): Remove definition.
+	(DARWIN_VERSION_IPHONE): Remove definition.
+	(enum darwin_version_type): New enum.
+	(darwin_default_min_version): Remove allowable_vers_types
+	parameter.
+	* config/arm/darwin.h (CC1_SPEC): Don't err on
+	-mmacosx-version-min switch.
+	(DARWIN_ALLOWED_VERSION_TYPES): Remove definition.
+	* config/darwin-driver.c (darwin_default_min_version): Remove
+	allowable_vers_types parameter and logic to handle it.  Rename
+	default_vers_type paramter to vers_type.
+
+2008-03-13  Josh Conner  <jconner@apple.com>
+
+	Radar 5777572
+	* config.gcc: Replace all instances of 'aspen' with 'iphone'.
+	* config/darwin-c.c: Likewise.
+	* config/darwin.opt: Likewise.
+	* config/i386/darwin.h: Likewise.
+	* config/rs6000/darwin.h: Likewise.
+	* config/rs6000/rs6000.c: Likewise.
+	* config/darwin.h: Likewise.
+	* config/arm/darwin.h: Likewise.  Also, set default minversion
+	to 2.0.
+	* config/darwin-driver.c: Likewise.
+	* config/arm/t-slibgcc-aspen: Rename to...
+	* config/arm/t-slibgcc-iphone: ...new file.
+	* config/arm/libgcc-aspen.ver: Rename to...
+	* config/arm/libgcc-iphone.ver: ...new file.
+
+2008-03-12  Stuart Hastings  <stuart@apple.com>
+
+	Radar 5612787
+	* ChangeLog.apple: Fixed typo in two entries.
+
+2008-03-10  Stuart Hastings  <stuart@apple.com>
+
+	* config/i386/i386.c (ix86_builtins): Need APPLE LOCAL markers
+	  around deletion.
+
+2008-03-07  Josh Conner  <jconner@apple.com>
+
+	Radar 5782111
+	* config/darwin.h (ASM_OUTPUT_LABELREF): Add label prefix to
+	quoted names, too.
+
+2008-03-07  Stuart Hastings  <stuart@apple.com>
+
+	* c-common.c: Restore blank line to satisfy checklocals.
+	* config/i386/i386.c (ix86_builtins): APPLE LOCAL marker for
+	  deletion.
+	* config/darwin.c (output_objc_section_asm_op): Insert blank
+	  to force checklocal behavior.
+
+2008-03-07  Stuart Hastings  <stuart@apple.com>
+
+	Radar 5612787
+	* config/i386/ammintrin.h: Added APPLE LOCAL file marker.
+	* config/i386/nmmintrin.h: Added APPLE LOCAL file marker.
+	* config/i386/smmintrin.h: Added APPLE LOCAL file marker.
+	* c-typeck.c (build_binary_op): Added APPLE LOCAL marker.
+
+2008-03-06  Stuart Hastings  <stuart@apple.com>
+
+	Radar 5612787
+	* expr.h (expand_normal): New.
+	* config.gcc(extra_headers): For x86, added ammintrin.h,
+	  smmintrin.h, and nmmintrin.h.  (OPTION_MASK_ISA_SSE4_1,
+	  OPTION_MASK_ISA_SSE4_2, OPTION_MASK_ISA_SSE4A): New.
+	* doc/invoke.texi (-flax-vector-conversions): New flag.
+	* c.opt (-flax-vector-conversions): New flag.
+	* c-common.h (vector_types_convertible_p): Update extern decl.
+	  (-flax-vector-conversions): New.
+	* c-common.c (-flax-vector-conversions): New flag, defaulting
+	  TRUE.  (vector_types_convertible_p): Backport 4.3 code with
+	  new emit_lax_note parameter.
+	* c-opts.c (-flax-vector-conversions): New flag.
+	* c-typeck.c (convert_for_assignment, digest_init): New parm
+	  for vector_types_convertible_p.
+	* cp/call.c (standard_conversion): New parm for
+	  vector_types_convertible_p.
+	* cp/typeck.c (convert_for_assignment,
+	  ptr_reasonably_similar): New parm for
+	  vector_types_convertible_p.
+	* cp/typeck2.c (digest_init): New parm for
+	  vector_types_convertible_p.
+	* config/i386/i386.h (MASK_SSEREGPARM, MASK_SSSE3,
+	  MASK_NO_RED_ZONE): Tweak bit masks.
+	  (OPTION_MASK_ISA_SSE4_1, OPTION_MASK_ISA_SSE4_2,
+	  OPTION_MASK_ISA_SSE4A, TARGET_SSE4_1, TARGET_SSE4_2,
+	  TARGET_SSE4A): New.  (TARGET_SWITCHES): New flags "sse4.1",
+	  "sse4.2", "sse4", "no-sse4", "sse4a".
+	  (TARGET_CPU_CPP_BUILTINS): New defines "__SSE4_1__",
+	  "__SSE4_2__", "__SSE4A__".  (reg_class, REG_CLASS_NAMES,
+	  REG_CLASS_CONTENTS): New class: SSE_FIRST_REG.
+	  (REG_CLASS_FROM_CONSTRAINT, CONSTRAINT_LEN): New; support
+	  "Y0".
+	* config/i386/i386.md (UNSPEC_EXTRQI, UNSPEC_EXTRQ,
+	  UNSPEC_INSERTQI, UNSPEC_INSERTQ, UNSPEC_BLENDV,
+	  UNSPEC_INSERTPS, UNSPEC_DP, UNSPEC_MOVNTDQA, UNSPEC_MPSADBW,
+	  UNSPEC_PHMINPOSUW, UNSPEC_PTEST, UNSPEC_ROUND, UNSPEC_CRC32,
+	  UNSPEC_PCMPESTR, UNSPEC_PCMPISTR): New.  (sseinsq, sseinsqi,
+	  prefix_extra, negtf2, abstf2, *absnegtf2_sse, CRC32MODE,
+	  crc32modesuffix, crcmodeconstraint, sse4_2_crc32<mode>,
+	  sse4_2_crc32di): New. (length_immediate) Add support for
+	  SSE4A insertq.
+	* config/i386/nmmintrin.h: New.
+	* config/i386/smmintrin.h: New.
+	* config/i386/ammintrin.h: New.
+	* config/i386/predicates.md (reg_not_xmm0_operand,
+	  nonimm_not_xmm0_operand, const_pow2_1_to_2_operand,
+	  const_pow2_1_to_32768_operand): New.
+	* config/i386/smmintrin.h: New file.
+	* config/i386/i386-modes.def
+	  (CCA, CCC, CCO, CCS, V2QI): New modes.
+	* config/i386/sse.md (SSEMODE14, sse4_2_crc32<mode>,
+	  sse4_2_crc32di, *vec_setv4sf_sse4_1, sse4_1_insertps,
+	  sse4_1_mulv2siv2di3, *sse4_1_mulv4si3, *sse4_1_smax<mode>3,
+	  *sse4_1_umax<mode>3, *sse4_1_smin<mode>3,
+	  *sse4_1_umin<mode>3, sse4_1_eqv2di3, sse4_2_gtv2di3,
+	  *sse4_1_pinsrb, *sse4_1_pinsrd, *sse4_1_pinsrq,
+	  *sse4_1_pextrb, *sse4_1_pextrb_memory, sse2_pextrw,
+	  *sse4_1_pextrw_memory, *sse4_1_pextrd, *sse4_1_pextrq,
+	  sse4a_vmmovntv2df, sse4a_movntdf, sse4a_vmmovntv4sf,
+	  sse4a_movntsf, sse4a_extrqi, sse4a_extrq, sse4a_insertqi,
+	  sse4a_insertq, sse4_1_blendpd, sse4_1_blendps,
+	  sse4_1_blendvpd, sse4_1_blendvps, sse4_1_dppd, sse4_1_dpps,
+	  sse4_1_movntdqa, sse4_1_mpsadbw, sse4_1_packusdw,
+	  sse4_1_pblendvb, sse4_1_pblendw, sse4_1_phminposuw,
+	  sse4_1_extendv8qiv8hi2, *sse4_1_extendv8qiv8hi2,
+	  sse4_1_extendv4qiv4si2, *sse4_1_extendv4qiv4si2,
+	  sse4_1_extendv2qiv2di2, *sse4_1_extendv2qiv2di2,
+	  sse4_1_extendv4hiv4si2, *sse4_1_extendv4hiv4si2,
+	  sse4_1_extendv2hiv2di2, *sse4_1_extendv2hiv2di2,
+	  sse4_1_extendv2siv2di2, *sse4_1_extendv2siv2di2,
+	  sse4_1_zero_extendv8qiv8hi2, *sse4_1_zero_extendv8qiv8hi2,
+	  sse4_1_zero_extendv4qiv4si2, *sse4_1_zero_extendv4qiv4si2,
+	  sse4_1_zero_extendv2qiv2di2, *sse4_1_zero_extendv2qiv2di2,
+	  sse4_1_zero_extendv4hiv4si2, *sse4_1_zero_extendv4hiv4si2,
+	  sse4_1_zero_extendv2hiv2di2, *sse4_1_zero_extendv2hiv2di2,
+	  sse4_1_zero_extendv2siv2di2, *sse4_1_zero_extendv2siv2di2,
+	  sse4_1_ptest, sse4_1_roundpd, sse4_1_roundps,
+	  sse4_1_roundsd, sse4_1_roundss, sse4_2_pcmpestr,
+	  sse4_2_pcmpestri, sse4_2_pcmpestrm, sse4_2_pcmpestr_cconly,
+	  sse4_2_pcmpistr, sse4_2_pcmpistri, sse4_2_pcmpistrm,
+	  sse4_2_pcmpistr_cconly): New.  (sse2_smulv8hi3_highpart):
+	  Split and renamed to smulv8hi3_highpart and
+	  *smulv8hi3_highpart.  (sse2_umulv8hi3_highpart): Split and
+	  renamed to umulv8hi3_highpart and *umulv8hi3_highpart.
+	  (sse2_umulv2siv2di3): Tweaked to V4SImode, added
+	  prefix_data16.  (umaxv4si3): Support pmaxud.  (umin<mode>3):
+	  Support pminud.  * config/i386/darwin.h
+	  (MASK_MACHO_DYNAMIC_NO_PIC, MASK_ALIGN_NATURAL,
+	  MASK_ALIGN_MAC68K): Tweak mask bits.  *
+	  config/i386/i386-protos.h (ix86_expand_sse_unpack,
+	  ix86_expand_sse4_unpack): New.  * config/i386/i386.c
+	  (x86_popcnt) New.  (enum pta_flags): Added PTA_CX16,
+	  PTA_POPCNT, PTA_ABM, PTA_SSE4A, PTA_NO_SAHF, PTA_SSE4_1,
+	  PTA_SSE4_2.  (override_options): Support
+	  OPTION_MASK_ISA_SSE4_1, OPTION_MASK_ISA_SSE4_2,
+	  OPTION_MASK_ISA_SSE4A, x86_popcnt.  (ix86_expand_int_vcond):
+	  Backport 4.3 code.  (ix86_expand_sse_unpack,
+	  ix86_expand_sse4_unpack): New.  (IX86_BUILTIN_MOVNTSD,
+	  IX86_BUILTIN_MOVNTSS, IX86_BUILTIN_EXTRQI,
+	  IX86_BUILTIN_EXTRQ, IX86_BUILTIN_INSERTQI,
+	  IX86_BUILTIN_INSERTQ, IX86_BUILTIN_BLENDPD,
+	  IX86_BUILTIN_BLENDPS, IX86_BUILTIN_BLENDVPD,
+	  IX86_BUILTIN_BLENDVPS, IX86_BUILTIN_PBLENDVB128,
+	  IX86_BUILTIN_PBLENDW128, IX86_BUILTIN_DPPD,
+	  IX86_BUILTIN_DPPS, IX86_BUILTIN_INSERTPS128,
+	  IX86_BUILTIN_MOVNTDQA, IX86_BUILTIN_MPSADBW128,
+	  IX86_BUILTIN_PACKUSDW128, IX86_BUILTIN_PCMPEQQ,
+	  IX86_BUILTIN_PHMINPOSUW128, IX86_BUILTIN_PMAXSB128,
+	  IX86_BUILTIN_PMAXSD128, IX86_BUILTIN_PMAXUD128,
+	  IX86_BUILTIN_PMAXUW128, IX86_BUILTIN_PMINSB128,
+	  IX86_BUILTIN_PMINSD128, IX86_BUILTIN_PMINUD128,
+	  IX86_BUILTIN_PMINUW128, IX86_BUILTIN_PMOVSXBW128,
+	  IX86_BUILTIN_PMOVSXBD128, IX86_BUILTIN_PMOVSXBQ128,
+	  IX86_BUILTIN_PMOVSXWD128, IX86_BUILTIN_PMOVSXWQ128,
+	  IX86_BUILTIN_PMOVSXDQ128, IX86_BUILTIN_PMOVZXBW128,
+	  IX86_BUILTIN_PMOVZXBD128, IX86_BUILTIN_PMOVZXBQ128,
+	  IX86_BUILTIN_PMOVZXWD128, IX86_BUILTIN_PMOVZXWQ128,
+	  IX86_BUILTIN_PMOVZXDQ128, IX86_BUILTIN_PMULDQ128,
+	  IX86_BUILTIN_PMULLD128, IX86_BUILTIN_ROUNDPD,
+	  IX86_BUILTIN_ROUNDPS, IX86_BUILTIN_ROUNDSD,
+	  IX86_BUILTIN_ROUNDSS, IX86_BUILTIN_PTESTZ,
+	  IX86_BUILTIN_PTESTC, IX86_BUILTIN_PTESTNZC,
+	  IX86_BUILTIN_VEC_EXT_V16QI, IX86_BUILTIN_VEC_SET_V2DI,
+	  IX86_BUILTIN_VEC_SET_V4SF, IX86_BUILTIN_VEC_SET_V4SI,
+	  IX86_BUILTIN_VEC_SET_V16QI, IX86_BUILTIN_VEC_PACK_SFIX,
+	  IX86_BUILTIN_CRC32QI, IX86_BUILTIN_CRC32HI,
+	  IX86_BUILTIN_CRC32SI, IX86_BUILTIN_CRC32DI,
+	  IX86_BUILTIN_PCMPESTRI128, IX86_BUILTIN_PCMPESTRM128,
+	  IX86_BUILTIN_PCMPESTRA128, IX86_BUILTIN_PCMPESTRC128,
+	  IX86_BUILTIN_PCMPESTRO128, IX86_BUILTIN_PCMPESTRS128,
+	  IX86_BUILTIN_PCMPESTRZ128, IX86_BUILTIN_PCMPISTRI128,
+	  IX86_BUILTIN_PCMPISTRM128, IX86_BUILTIN_PCMPISTRA128,
+	  IX86_BUILTIN_PCMPISTRC128, IX86_BUILTIN_PCMPISTRO128,
+	  IX86_BUILTIN_PCMPISTRS128, IX86_BUILTIN_PCMPISTRZ128,
+	  IX86_BUILTIN_PCMPGTQ, IX86_BUILTIN_INFQ, IX86_BUILTIN_FABSQ,
+	  IX86_BUILTIN_COPYSIGNQ): New.  (def_builtin_const,
+	  bdesc_ptest, bdesc_pcmpestr, bdesc_pcmpistr, bdesc_crc32,
+	  bdesc_sse_3arg): New.  (bdesc_2arg):
+	  __builtin_ia32_pmulhw128 and __builtin_ia32_pmulhuw128
+	  updated for new code.  CODE_FOR_sse4_1_mulv2siv2di3,
+	  __builtin_ia32_packusdw128, __builtin_ia32_pcmpeqq,
+	  __builtin_ia32_pmaxsb128, __builtin_ia32_pmaxsd128,
+	  __builtin_ia32_pmaxud128, __builtin_ia32_pmaxuw128,
+	  __builtin_ia32_pminsb128, __builtin_ia32_pminsd128,
+	  __builtin_ia32_pminud128, __builtin_ia32_pminuw128,
+	  __builtin_ia32_pmulld128, __builtin_ia32_pcmpgtq: New.
+	  (bdesc_1arg): CODE_FOR_sse4_1_extendv8qiv8hi2,
+	  CODE_FOR_sse4_1_extendv4qiv4si2,
+	  CODE_FOR_sse4_1_extendv2qiv2di2,
+	  CODE_FOR_sse4_1_extendv4hiv4si2,
+	  CODE_FOR_sse4_1_extendv2hiv2di2,
+	  CODE_FOR_sse4_1_extendv2siv2di2,
+	  CODE_FOR_sse4_1_zero_extendv8qiv8hi2,
+	  CODE_FOR_sse4_1_zero_extendv4qiv4si2,
+	  CODE_FOR_sse4_1_zero_extendv2qiv2di2,
+	  CODE_FOR_sse4_1_zero_extendv4hiv4si2,
+	  CODE_FOR_sse4_1_zero_extendv2hiv2di2,
+	  CODE_FOR_sse4_1_zero_extendv2siv2di2,
+	  CODE_FOR_sse4_1_phminposuw, CODE_FOR_sse4_1_roundpd,
+	  CODE_FOR_sse4_1_roundps: New.  (ix86_init_mmx_sse_builtins):
+	  Added SSE4 builtin signatures, including
+	  v2di_ftype_v2di_unsigned_unsigned,
+	  v2di_ftype_v2di_v2di_unsigned_unsigned,
+	  v2di_ftype_v2di_v16qi, v2df_ftype_v2df_v2df_v2df,
+	  v4sf_ftype_v4sf_v4sf_v4sf, v8hi_ftype_v16qi,
+	  v4si_ftype_v16qi, v2di_ftype_v16qi, v4si_ftype_v8hi,
+	  v2di_ftype_v8hi, v2di_ftype_v4si, v2di_ftype_pv2di,
+	  v16qi_ftype_v16qi_v16qi_int, v16qi_ftype_v16qi_v16qi_v16qi,
+	  v8hi_ftype_v8hi_v8hi_int, v4si_ftype_v4si_v4si_int,
+	  int_ftype_v2di_v2di, int_ftype_v16qi_int_v16qi_int_int,
+	  v16qi_ftype_v16qi_int_v16qi_int_int, and
+	  int_ftype_v16qi_v16qi_int.  Added __builtin_ia32_movntdqa,
+	  __builtin_ia32_pmovsxbw128, __builtin_ia32_pmovsxbd128,
+	  __builtin_ia32_pmovsxbq128, __builtin_ia32_pmovsxwd128,
+	  __builtin_ia32_pmovsxwq128, __builtin_ia32_pmovsxdq128,
+	  __builtin_ia32_pmovzxbw128, __builtin_ia32_pmovzxbd128,
+	  __builtin_ia32_pmovzxbq128, __builtin_ia32_pmovzxwd128,
+	  __builtin_ia32_pmovzxwq128, __builtin_ia32_pmovzxdq128,
+	  __builtin_ia32_pmuldq128, __builtin_ia32_roundpd,
+	  __builtin_ia32_roundps, __builtin_ia32_roundsd,
+	  __builtin_ia32_roundss, __builtin_ia32_movntsd,
+	  __builtin_ia32_movntss, __builtin_ia32_extrqi,
+	  __builtin_ia32_extrq, __builtin_ia32_insertqi,
+	  __builtin_ia32_insertq, __builtin_ia32_crc32di,
+	  __builtin_ia32_crc32qi, __builtin_ia32_crc32hi,
+	  __builtin_ia32_crc32si, __builtin_ia32_vec_set_v2di,
+	  __builtin_ia32_vec_set_v4sf, __builtin_ia32_vec_set_v4si,
+	  __builtin_ia32_vec_set_v16qi, and
+	  __builtin_ia32_vec_ext_v16qi.
+	  (ix86_expand_sse_4_operands_builtin, ix86_expand_crc32,
+	  ix86_expand_sse_ptest, ix86_expand_sse_pcmpestr,
+	  ix86_expand_sse_pcmpistr): New.  (ix86_expand_unop_builtin,
+	  ix86_expand_builtin, ix86_expand_vector_set,
+	  ix86_expand_vector_extract): Backport 4.3 code.
+	  (ix86_expand_vec_set_builtin): Backport PR31582 fix from
+	  4.2.
+	* config/darwin.c (machopic_select_section): Backport 4.3 code.
+	* testsuite/gcc.dg/vect/vect-none.c: Adjust for improved
+	  SSE4 vectorization.
+	* testsuite/lib/target-supports.exp (get_compiler_message):
+	  Backport additional parameters.
+	  (check_no_compiler_messages, check_no_messages_and_pattern):
+	  New.  (check_visibility_available,
+	  check_named_sections_available,
+	  check_effective_target_ilp32, check_effective_target_lp64):
+	  New parm for get_compiler_message().
+	* testsuite/gcc.target/i386/sse4_1-pmovsxwq.c: New.
+	* testsuite/gcc.target/i386/sse4_1-dpps-2.c: New.
+	* testsuite/gcc.target/i386/sse4_1-insertps-1.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pcmpeqq.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundsd-1.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundsd-3.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovsxbq.c: New.
+	* testsuite/gcc.target/i386/sse4_2-popcntq.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovsxbw.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pminsb.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pminsd.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmaxsb.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pblendw.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundss-1.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pblendvb.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmaxsd.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundss-3.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovzxwd.c: New.
+	* testsuite/gcc.target/i386/sse4_1-ptest-2.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pextrb.c: New.
+	* testsuite/gcc.target/i386/sse4a-montss.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pextrd.c: New.
+	* testsuite/gcc.target/i386/sse4_2-pcmpestri-2.c: New.
+	* testsuite/gcc.target/i386/i386.exp: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovzxbd.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundpd-1.c: New.
+	* testsuite/gcc.target/i386/sse4_2-pcmpistri-2.c: New.
+	* testsuite/gcc.target/i386/sse4_2-pcmpestrm-2.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundpd-3.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pinsrq.c: New.
+	* testsuite/gcc.target/i386/sse4_2-pcmpistrm-2.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pminuw.c: New.
+	* testsuite/gcc.target/i386/sse4_1-packusdw.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmaxuw.c: New.
+	* testsuite/gcc.target/i386/sse4_1-check.h: New.
+	* testsuite/gcc.target/i386/sse4_2-check.h: New.
+	* testsuite/gcc.target/i386/sse4_1-dppd-1.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovsxwd.c: New.
+	* testsuite/gcc.target/i386/sse4_1-blendps.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovzxdq.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundps-1.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundps-3.c: New.
+	* testsuite/gcc.target/i386/sse4a-extract.c: New.
+	* testsuite/gcc.target/i386/sse4_2-crc32q.c: New.
+	* testsuite/gcc.target/i386/sse4_2-pcmpstr.h: New.
+	* testsuite/gcc.target/i386/sse4_1-pmuldq.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovsxbd.c: New.
+	* testsuite/gcc.target/i386/sse4_1-dpps-1.c: New.
+	* testsuite/gcc.target/i386/sse4_2-crc32w.c: New.
+	* testsuite/gcc.target/i386/sse4_1-insertps-2.c: New.
+	* testsuite/gcc.target/i386/sse4_1-phminposuw.c: New.
+	* testsuite/gcc.target/i386/sse4_2-popcnt.h: New.
+	* testsuite/gcc.target/i386/sse4_1-extractps.c: New.
+	* testsuite/gcc.target/i386/sse4_1-blendvps.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundsd-2.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundsd-4.c: New.
+	* testsuite/gcc.target/i386/sse4_2-popcntl.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovsxdq.c: New.
+	* testsuite/gcc.target/i386/sse4_2-crc32.h: New.
+	* testsuite/gcc.target/i386/sse4a-insert.c: New.
+	* testsuite/gcc.target/i386/sse4a-montsd.c: New.
+	* testsuite/gcc.target/i386/sse4_1-round.h: New.
+	* testsuite/gcc.target/i386/sse4_1-pminud.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundss-2.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pinsrb.c: New.
+	* testsuite/gcc.target/i386/sse4_1-ptest-1.c: New.
+	* testsuite/gcc.target/i386/sse4_1-mpsadbw.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmaxud.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundss-4.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pinsrd.c: New.
+	* testsuite/gcc.target/i386/sse4_1-ptest-3.c: New.
+	* testsuite/gcc.target/i386/sse4_2-pcmpestri-1.c: New.
+	* testsuite/gcc.target/i386/sse4_1-blendpd.c: New.
+	* testsuite/gcc.target/i386/sse4_2-pcmpestrm-1.c: New.
+	* testsuite/gcc.target/i386/sse4_2-pcmpistri-1.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundpd-2.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovzxwq.c: New.
+	* testsuite/gcc.target/i386/sse4_2-pcmpgtq.c: New.
+	* testsuite/gcc.target/i386/sse4_2-pcmpistrm-1.c: New.
+	* testsuite/gcc.target/i386/sse4_2-crc32b.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pextrq.c: New.
+	* testsuite/gcc.target/i386/sse4_1-dppd-2.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovzxbq.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pextrw.c: New.
+	* testsuite/gcc.target/i386/sse4_1-movntdqa.c: New.
+	* testsuite/gcc.target/i386/sse4_1-roundps-2.c: New.
+	* testsuite/gcc.target/i386/sse4_2-crc32l.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmovzxbw.c: New.
+	* testsuite/gcc.target/i386/sse4_1-pmulld.c: New.
+	* testsuite/gcc.target/i386/sse4_1-blendvpd.c: New.
+
+2008-03-05  Josh Conner  <jconner@apple.com>
+
+	Radar 5603763
+	* config/darwin.h (GEN_SUFFIXED_NAME_FOR_SYMBOL): New macro...
+	(GEN_LAZY_PTR_NAME_FOR_SYMBOL): ...use it.
+	* config/arm/arm.c (machopic_output_stub): Generate stub lazy
+	ptr label using GEN_SUFFIXED_NAME_FOR_SYMBOL instead of simple
+	concatenation.
+
+2008-03-04  Josh Conner  <jconner@apple.com>
+
+	Radar 5603792
+	* config/arm/arm.c (arm_darwin_encode_section_info): New
+	function...
+	(TARGET_ENCODE_SECTION_INFO): ...use for TARGET_MACHO.
+	(arm_encode_section_info): Remove TARGET_MACHO-specific bits.
+
+2008-03-03  Jim Grosbach <grosbach@apple.com>
+
+	Radar 5316398
+	* config/arm/t-darwin (LIB2FUNCS_EXTRA, LIB2FUNCS_EXCLUDE):
+	Override libgcc functions for double/single float to DI
+	conversion with arm specific versions.
+	* config/arm/_fixdfdi.c: New file. ARM specific __fixdfdi()
+	* config/arm/_fixunsdfdi.c: New file. ARM specific __fixunsdfdi()
+	* config/arm/_fixsfdi.c: New file. ARM specific __fixsfdi()
+	* config/arm/_fixunssfdi.c: New file. ARM specific __fixunssfdi()
+
+2008-03-03  Josh Conner  <jconner@apple.com>
+
+	Radar 5757769
+	* config/arm/arm.c (arm_dbx_register_number): Start VFP
+	debug register numbering from 256.
+
+2008-02-29  Josh Conner  <jconner@apple.com>
+
+	Radar 5730079
+	* config/i386/darwin.c (DARWIN_ALLOWED_VERSION_TYPES): New
+	macro.
+	* config/rs6000/darwin.h (CC1_SPEC): Generate an error for
+	-maspen-version-min.
+	(DARWIN_ALLOWED_VERSION_TYPES): New macro.
+	* config/darwin.h: Change DARWIN_VERSION from enums to
+	bitfield macros.
+	(darwin_default_min_version): Add allowable types parameter.
+	* config/arm/darwin.c (CC1_SPEC): Generate an error for
+	-mmacosx-version-min.
+	(DARWIN_ALLOWED_VERSION_TYPES): New macro.
+	* config/darwin-driver.c (darwin_default_min_version): Add
+	allowable_vers_types parameter and logic to handle it.  Rename
+	vers_type parameter to default_vers_type.
+
+2008-02-26  Caroline Tice  <ctice@apple.com>
+
+	Radar 5743691
+	* dwarf2out.c (DW_ISA_*): New defines.
+	(dwarf_attr_name): Recognize DW_AT_APPLE_isa.
+	(gen_subprogram_die): For ARM, emit DW_AT_APPLE_isa.
+	* dwarf2.h (enum dwarf_attribute): Add DW_AT_APPLE_isa.
+
+2008-02-21  Caroline Tice  <ctice@apple.com>
+
+	Radar 5741070
+	* objc/objc-act.c (objc_finish_message_expr):  Find
+	the record-type tree from the class interface, and mark the record
+	type as used, for emitting debug info.
+	* cp/cp-objcp-common.c (c_return_interface_record_type):  New function.
+	* cp/cp-tree.h (c_return_interface_record_type): New extern function
+	declaration.
+	* c-tree.h (c_return_interface_record_type): Likewise
+	* c-decl.c (c_return_interface_record_type): New function.
+
+2008-02-18  Jim Grosbach <grosbach@apple.com>
+	Radar 5752613
+	* fold-const.c (fold_inf_compare): equality comparisons to
+	infinity are not equivalent to relatives comparison to DBL_MAX
+	due to, e.g., different treatment of the "invalid" flag. Remove the
+	conversions which make those transformations.
+
+2008-02-19  Caroline Tice  <ctice@apple.com>
+
+	Radar 2338865
+	* dwarf2out.c (options.h): New include statement.
+	(dwarf_attr_name): Add cases for DW_AT_APPLE_flags and
+	DW_AT_APPLE_optimized.
+	(gen_subprogram_die):  Add DW_AT_APPLE_optimized to subprogram die if
+	optimization level for the subroutine is greater than zero.
+	(dwarf2out_finish):  Add DW_AT_APPLE_optimized to the comp unit die if
+	the optimization level is greater than zero.
+	* dwarf2.h (DW_AT_APPLE_optimized):  Add new Apple attribute.
+
+2008-02-08  Josh Conner  <jconner@apple.com>
+
+	Radar 5681645
+	Radar 5717692
+	* config.gcc: Move t-slibgcc-darwin from *-*-darwin* into
+	i[34567]86-*-darwin*, powerpc-*-darwin*, and
+	powerpc64-*-darwin*.  Add t-libgcc-aspen to arm*-*-darwin*.
+	* config/i386/darwin.h (DARWIN_ASPEN_LIBGCC_SPEC): New macro.
+	* config/rs6000/darwin.h (DARWIN_ASPEN_LIBGCC_SPEC): New macro.
+	* config/darwin.h (REAL_LIBGCC_SPEC): If -maspen-version-min is
+	seen, use darwin_aspen_libgcc spec.
+	(DARWIN_EXTRA_SPECS): Add darwin_aspen_libgcc.
+	* config/arm/t-darwin (SHLIB_VERPFX): Remove.
+	* config/arm/t-slibgcc-aspen: New file.
+	* config/arm/darwin.h (DARWIN_ASPEN_LIBGCC_SPEC): New macro.
+	* config/arm/libgcc-aspen.ver: New file.
+	* config/arm/darwin-libgcc.10.4.ver: Remove file.
+	* config/arm/darwin-libgcc.10.5.ver: Remove file.
+
 2008-02-06  Josh Conner  <jconner@apple.com>
 
 	Radar 5723857
@@ -12,7 +895,7 @@
 	(OBJC_TARGET_FLAG_OBJC_ABI): New macro.
 
 2008-02-06  Hui-May Chang  <hm.chang@apple.com>
-        
+
 	Radar 5103201
 	* config/i386/mmx.md (mov<MMXMODEI>_internal_rex64,
 	mov<MMXMODEI>_internal) : Resolved the conflict between mainline
@@ -73,7 +956,7 @@
 	(define_expand "call_value"): Likewise.
 
 2008-01-30  Hui-May Chang  <hm.chang@apple.com>
-        
+
 	Radar 5103201
 	Backport from mainline:
 	2007-06-05  H.J. Lu  <hongjiu.lu@intel.com>
@@ -184,7 +1067,7 @@
 	(add_src_coords_attributes): Modify test condition for adding
 	DW_AT_MIPS_linkage_name attribute:  Change TREE_PUBLIC to
 	TREE_PUBLIC || TREE_STATIC || DECL_EXTERNAL, and replace
-	DECL_ASSEMBLER_NAME test with call to 
+	DECL_ASSEMBLER_NAME test with call to
 	assembler_name_exists_and_is_different.
 
 2008-01-10  Josh Conner  <jconner@apple.com>
@@ -220,7 +1103,7 @@
 
 	Radar 5645155
 	* dwarf2out.c (dwarf2out.c):  Add call to maybe_emit_file, to
-	make sure current compilation unit filename is added to 
+	make sure current compilation unit filename is added to
 	line table info.
 	* testsuite/gcc.apple/dwarf-files.c: New testcase.
 
@@ -305,7 +1188,7 @@
 2007-12-11  Eric Christopher  <echristo@apple.com>
 
 	Radar 5582941
-	* config/i386/darwin.h (SUBTARGET_OVERRIDE_OPTIONS): Use correct 
+	* config/i386/darwin.h (SUBTARGET_OVERRIDE_OPTIONS): Use correct
 	bitmask for default setting variables.
 
 2007-12-11  Josh Conner  <jconner@apple.com>
@@ -314,27 +1197,27 @@
 
 	Backport from FSF 4.2:
 	2007-07-25  Dorit Nuzman  <dorit@il.ibm.com>
-            Devang Patel  <dpatel@apple.com>
-        PR tree-optimization/25413
-        * targhooks.c (default_builtin_vector_alignment_reachable): New.
-        * targhooks.h (default_builtin_vector_alignment_reachable): New.
-        * tree.h (contains_packed_reference): New.
-        * expr.c (contains_packed_reference): New.
-        * tree-vect-analyze.c (vector_alignment_reachable_p): New.
-        (vect_enhance_data_refs_alignment): Call
-        vector_alignment_reachable_p.
-        * target.h (vector_alignment_reachable): New builtin.
-        * target-def.h (TARGET_VECTOR_ALIGNMENT_REACHABLE): New.
-        * config/rs6000/rs6000.c (rs6000_vector_alignment_reachable):
+	    Devang Patel  <dpatel@apple.com>
+	PR tree-optimization/25413
+	* targhooks.c (default_builtin_vector_alignment_reachable): New.
+	* targhooks.h (default_builtin_vector_alignment_reachable): New.
+	* tree.h (contains_packed_reference): New.
+	* expr.c (contains_packed_reference): New.
+	* tree-vect-analyze.c (vector_alignment_reachable_p): New.
+	(vect_enhance_data_refs_alignment): Call
+	vector_alignment_reachable_p.
+	* target.h (vector_alignment_reachable): New builtin.
+	* target-def.h (TARGET_VECTOR_ALIGNMENT_REACHABLE): New.
+	* config/rs6000/rs6000.c (rs6000_vector_alignment_reachable):
 	New.
-        (TARGET_VECTOR_ALIGNMENT_REACHABLE): Define.
+	(TARGET_VECTOR_ALIGNMENT_REACHABLE): Define.
 
 	Revert the following:
 	2005-12-07  Devang Patel  <dpatel@apple.com>
-        Radar 4333194
-        * tree-vect-analyze.c (vect_compute_data_ref_alignment): Check
-        misalignment where natural alignment is not reachable using loop
-        peeling.
+	Radar 4333194
+	* tree-vect-analyze.c (vect_compute_data_ref_alignment): Check
+	misalignment where natural alignment is not reachable using loop
+	peeling.
 
 2007-12-05  Stuart Hastings  <stuart@apple.com>
 
@@ -391,10 +1274,10 @@
 	rewrite to count bytes as well as emit code.
 	(thumb_pushpop):  Rename handle_thumb_pushpop, rewrite
 	similarly.
-        (thumb_unexpanded_epilogue):  Rename
+	(thumb_unexpanded_epilogue):  Rename
 	handle_thumb_unexpanded_epilogue, rewrite similarly.
-        (thumb_output_function_prologue):  Rename
-        handle_thumb_unexpanded_prologue, rewrite similarly.
+	(thumb_output_function_prologue):  Rename
+	handle_thumb_unexpanded_prologue, rewrite similarly.
 	(switch8_libfunc, switchu8_libfunc, switch16_libfunc,
 	switch32_libfunc, register_switch8_libfunc,
 	register_switchu8_libfunc, register_switch16_libfunc,
@@ -916,11 +1799,11 @@
 2007-09-04  Hui-May Chang  <hm.chang@apple.com>
 	Radar 5155743
 	* target.h (have_dynamic_stack_space): New.
-        * target-def.h (TARGET_HAVE_DYNAMIC_STACK_SPACE) : New.
-        * explow.c (allocate_dynamic_stack_space) : Reserve space
-          for outgoing args and registers saved area if
-          DYNAMIC_STACK_OFFSET is defined.
-        * rs6000.c (TARGET_HAVE_DYNAMIC_STACK_SPACE): New.
+	* target-def.h (TARGET_HAVE_DYNAMIC_STACK_SPACE) : New.
+	* explow.c (allocate_dynamic_stack_space) : Reserve space
+	  for outgoing args and registers saved area if
+	  DYNAMIC_STACK_OFFSET is defined.
+	* rs6000.c (TARGET_HAVE_DYNAMIC_STACK_SPACE): New.
 
 2007-08-23  Hui-May Chang  <hm.chang@apple.com>
 
@@ -941,7 +1824,7 @@
 
 2007-08-22  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4947311
+	Radar 4947311
 	* c-common.h (objc_declare_protocols, objc_start_protocol): Decl changed.
 	* stub-objc.c (objc_declare_protocols, objc_start_protocol): Changed.
 	* c-parser.c (c_parser_external_declaration): Call to
@@ -965,13 +1848,13 @@
 
 2007-08-20  Hui-May Chang  <hm.chang@apple.com>
 
-        Radar 4708086
-        * passes.c (rest_of_compilation): Removed after confirming the
+	Radar 4708086
+	* passes.c (rest_of_compilation): Removed after confirming the
 	patch to radar 4548482 is no longer needed in gcc 4.2.
 
 2007-08-20  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5422751
+	Radar 5422751
 	* c-common.h (objc_protocol_implementation): decl removed.
 	* stub-objc.c (objc_protocol_implementation): stub removed.
 	* c-parser.c (c_parser_objc_class_definition): Misplaced syntax
@@ -979,10 +1862,10 @@
 
 2007-08-17  Hui-May Chang  <hm.chang@apple.com>
 
-        Radar 5134231
-        * gcc/config/rs6000/rs6000.c (rs6000_handle_option): Set
-        rs6000_alignment_flags to OPTION_MASK_ALIGN_MAC68K instead of
-        OPTION_ALIGN_MAC68K for -malign-mac68k option.
+	Radar 5134231
+	* gcc/config/rs6000/rs6000.c (rs6000_handle_option): Set
+	rs6000_alignment_flags to OPTION_MASK_ALIGN_MAC68K instead of
+	OPTION_ALIGN_MAC68K for -malign-mac68k option.
 
 2007-08-17  Hui-May Chang  <hm.chang@apple.com>
 
@@ -1004,15 +1887,15 @@
 
 2007-08-10  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5376125
-        * doc/invoke.texi (-Wdirect-ivar-access): New option
-        * c.opt (-Wdirect-ivar-access): New warning
+	Radar 5376125
+	* doc/invoke.texi (-Wdirect-ivar-access): New option
+	* c.opt (-Wdirect-ivar-access): New warning
 
 2007-08-10  Stuart Hastings  <stuart@apple.com>
 
 	Radar 5379188
 	* config/i386/i386.md (*darwin_cmpstrnqi_nz_1,
-          *darwin_cmpstrqi_1): Mark destination with earlyclobber.
+	  *darwin_cmpstrqi_1): Mark destination with earlyclobber.
 
 2007-08-10  Stuart Hastings  <stuart@apple.com>
 
@@ -1044,11 +1927,11 @@
 2007-07-17  Stuart Hastings  <stuart@apple.com>
 
 	* config/i386.c (ix86_init_mmx_sse_builtins): Delete
-          twice-merged definition of __builtin_ia32_vec_ext_v16qi.
+	  twice-merged definition of __builtin_ia32_vec_ext_v16qi.
 
 2007-07-13  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5277239
+	Radar 5277239
 	* c-parser.c (c_parser_next_token_starts_declspecs): Exclude
 	objc2's property dot-syntax as a declarator.
 	(c_parser_postfix_expression): Convert property dot-syntax on
@@ -1072,19 +1955,19 @@
 2007-06-29  Stuart Hastings  <stuart@apple.com>
 
 	* gcc/cfghooks.c (split_block): One-line APPLE LOCAL needs
-          begin and end markers.
+	  begin and end markers.
 	* gcc/objc/objc-act.c (objc2_build_indirect_ref_ivar2): Add a
-          comment to prevent '}' from matching in the wrong place.
+	  comment to prevent '}' from matching in the wrong place.
 	* gcc/testsuite/gcc.dg/invalid-call-1.c: Missing APPLE LOCAL.
 	* gcc/c-common.h (objc_build_weak_reference_tree,
-          objc_v2_build_ivar_ref, diagnose_selector_cast,
-          objc_check_format_nsstring): One-line APPLE LOCAL needs
-          begin and end markers.
+	  objc_v2_build_ivar_ref, diagnose_selector_cast,
+	  objc_check_format_nsstring): One-line APPLE LOCAL needs
+	  begin and end markers.
 	* gcc/stub-objc.c: Remove a blank line to appease checklocals.
-          (objc_build_weak_reference_type): Move an APPLE LOCAL from
-          here... (objc_weak_reference_expr): ...to here.
+	  (objc_build_weak_reference_type): Move an APPLE LOCAL from
+	  here... (objc_weak_reference_expr): ...to here.
 	* gcc/loop-doloop.c (doloop_valid_p): Remove a blank line to
-          appease checklocals.
+	  appease checklocals.
 	* gcc/predict.c (predict_loops): Likewise.
 	* gcc/tree-flow.c: Likewise.
 	* gcc/tree-ssa-loop-niter.c: Likewise.
@@ -1115,17 +1998,17 @@
 
 2007-06-29  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5276085
-        * c-parser.c (c_parser_binary_expression) : objc_generate_weak_read
+	Radar 5276085
+	* c-parser.c (c_parser_binary_expression) : objc_generate_weak_read
 	replaced with call to objc_build_weak_reference_tree
-        * c-typeck.c (build_modify_expr, c_objc_common_truthvalue_conversion):
+	* c-typeck.c (build_modify_expr, c_objc_common_truthvalue_conversion):
 	objc_remove_weak_read replaced with call to objc_weak_reference_expr.
-        * c-common.h (objc_weak_reference_expr,
-        objc_build_weak_reference_tree) : New decl.
-        (objc_generate_weak_read, objc_remove_weak_read): remove.
-        * stub-objc.c (objc_weak_reference_expr,
-        objc_build_weak_reference_tree): New stub.
-        (objc_generate_weak_read, objc_remove_weak_read): remove.
+	* c-common.h (objc_weak_reference_expr,
+	objc_build_weak_reference_tree) : New decl.
+	(objc_generate_weak_read, objc_remove_weak_read): remove.
+	* stub-objc.c (objc_weak_reference_expr,
+	objc_build_weak_reference_tree): New stub.
+	(objc_generate_weak_read, objc_remove_weak_read): remove.
 
 2007-06-28  Geoffrey Keating  <geoffk@apple.com>
 
@@ -1179,8 +2062,8 @@
 
 2007-06-22  Eric Christopher  <echristo@apple.com>
 
-        Radar 5289384
-        * config/i386/darwin.h: Remove duplicate apple local code.
+	Radar 5289384
+	* config/i386/darwin.h: Remove duplicate apple local code.
 
 2007-06-22  Geoffrey Keating  <geoffk@apple.com>
 
@@ -1237,30 +2120,30 @@
 
 	Radar 5150147
 	* gcc/tree-ssa-loop-niter.c (unmark_surely_finite_loop,
-          mark_maybe_infinite_loops): Remove.
+	  mark_maybe_infinite_loops): Remove.
 	* gcc/tree-pass.h (pass_mark_maybe_inf_loops): Remove.
 	* gcc/builtins.c (BUILT_IN_MAYBE_INFINITE_LOOP): Remove.
 	* gcc/cfghooks.c (split_block, make_forwarder_block): Remove
-          APPLE LOCAL LNO code.
+	  APPLE LOCAL LNO code.
 	* gcc/toplev.c (lang_dependent_init): Remove APPLE LOCAL LNO
-          code.
+	  code.
 	* gcc/builtins.def (BUILT_IN_MAYBE_INFINITE_LOOP): Remove.
 	* gcc/opts.c (set_flags_from_O): Remove APPLE LOCAL LNO code.
 	* gcc/tree-ssa-loop.c (tree_mark_maybe_inf_loops,
-          gate_tree_mark_maybe_inf_loops, pass_mark_maybe_inf_loops):
-          Remove.
+	  gate_tree_mark_maybe_inf_loops, pass_mark_maybe_inf_loops):
+	  Remove.
 	* gcc/predict.c (predict_loops): Remove APPLE LOCAL LNO code.
 	* gcc/loop-doloop.c (doloop_valid_p): Remove APPLE LOCAL LNO
-          comment.
+	  comment.
 	* gcc/cfgloop.c (flow_loops_find): Remove APPLE LOCAL LNO
-          code.
+	  code.
 	* gcc/tree-flow.h (mark_maybe_inf_loops): Remove.
 	* gcc/tree-cfg.c (tree_redirect_edge_and_branch): Remove APPLE
-          LOCAL LNO code.
+	  LOCAL LNO code.
 	* gcc/passes.c (init_optimization_passes): Remove reference to
-          pass_mark_maybe_inf_loops.
+	  pass_mark_maybe_inf_loops.
 	* gcc/cfgrtl.c (purge_dead_edges): Remove APPLE LOCAL LNO
-          code.
+	  code.
 
 2007-06-16  Hui-May Chang  <hm.chang@apple.com>
 
@@ -1278,7 +2161,7 @@
 
 2007-06-06  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5250860 (Remove old property)
+	Radar 5250860 (Remove old property)
 	* config/darwin-c.c (darwin_cpp_builtins): Define
 	OBJC_NEW_PROPERTIES unconditionally.
 	* c-common.h: Remove enums and macros which defined
@@ -1306,7 +2189,7 @@
 
 2007-05-31  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5172645
+	Radar 5172645
 	* c.opt (Wproperty-assign-default): New warning option.
 	* doc/invoke.texi: Document -Wproperty-assign-default
 
@@ -1320,7 +2203,7 @@
 
 2007-05-23 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5195402
+	Radar 5195402
 	* c-format.c (handle_format_arg_attribute): Check for NSString *
 	and CFStringRef as valid formatting types.
 	(check_format_string): Ditto.
@@ -1335,20 +2218,20 @@
 
 2007-05-17  Eric Christopher  <echristo@apple.com>
 
-        Radar 4663646
-        * config/rs6000/rs6000.c (rs6000_emit_prologue): If the stack frame
-        is large then save r12 if we're going to save altivec registers and
-        use the frame pointer.
+	Radar 4663646
+	* config/rs6000/rs6000.c (rs6000_emit_prologue): If the stack frame
+	is large then save r12 if we're going to save altivec registers and
+	use the frame pointer.
 
 2007-05-18  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 2996215 (twik)
-        * config/darwin.c (darwin_build_constant_cfstring): Change error to
-        warning when character is not valid utf-8.
+	Radar 2996215 (twik)
+	* config/darwin.c (darwin_build_constant_cfstring): Change error to
+	warning when character is not valid utf-8.
 
 2007-05-18  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5202926
+	Radar 5202926
 	* c-common.h (objc_anonymous_local_objc_name): New decl.
 	* config/darwin-protos.h (objc_anonymous_local_objc_name): Decl.
 	* stub-objc.c (objc_anonymous_local_objc_name): New stub.
@@ -1357,14 +2240,14 @@
 
 2007-05-17  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 2996215
-        * c-common.h (objc_create_init_utf16_var): New decl.
-        * stub-objc.c (objc_create_init_utf16_var): New stub
-        * config/darwin-c.c (objc_cvt_utf8_utf16): New
-        * config/darwin-protos.h (objc_create_init_utf16_var): New decl.
-        (objc_cvt_utf8_utf16): New decl.
-        * config/darwin.c (darwin_build_constant_cfstring): Add support for
-        native char-set to UTF-16.
+	Radar 2996215
+	* c-common.h (objc_create_init_utf16_var): New decl.
+	* stub-objc.c (objc_create_init_utf16_var): New stub
+	* config/darwin-c.c (objc_cvt_utf8_utf16): New
+	* config/darwin-protos.h (objc_create_init_utf16_var): New decl.
+	(objc_cvt_utf8_utf16): New decl.
+	* config/darwin.c (darwin_build_constant_cfstring): Add support for
+	native char-set to UTF-16.
 
 2007-05-09  Caroline Tice  <ctice@apple.com>
 
@@ -1454,7 +2337,7 @@
 
 2007-05-07  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4157812
+	Radar 4157812
 	* c-common.h (objc_build_keyword_decl): Takes a new argument.
 	* stub-objc.c (objc_build_keyword_decl): Ditto.
 	* c-parser.c (c_parser_objc_method_decl): Recognize optional
@@ -1475,9 +2358,9 @@
 
 2007-05-02  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4502186
-        * c-typeck.c (convert_for_assignment): Remove synthesized 'volatile'
-        type before doing type comparison.
+	Radar 4502186
+	* c-typeck.c (convert_for_assignment): Remove synthesized 'volatile'
+	type before doing type comparison.
 
 2007-04-25  Hui-May Chang <hm.chang@apple.com>
 
@@ -1510,7 +2393,7 @@
 
 2007-04-20 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5130983
+	Radar 5130983
 	* c-common.h (enum lvalue_use): New enumerator lv_foreach
 	added.
 	* c-common.c (lvalue_error): Diagnose on lv_foreach.
@@ -1522,44 +2405,44 @@
 
 2007-04-13  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4899595
-        * c.opt (-fobjc-new-property) on by default.
-        * config/darwin-c.c (darwin_cpp_builtins): Define OBJC_NEW_PROPERTIES
-        when new property flag is on.
+	Radar 4899595
+	* c.opt (-fobjc-new-property) on by default.
+	* config/darwin-c.c (darwin_cpp_builtins): Define OBJC_NEW_PROPERTIES
+	when new property flag is on.
 
 2007-03-12  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5023725
-        * c-opts.c: Remove flag_objc_zerocost_exceptions check.
-        * config/darwin.h
-        (OBJC_FLAG_ZEROCOST_EXCEPTIONS): New macro to issue diagnostic.
-        (OBJC_FLAG_OBJC_ABI): Set -fobjc-zerocost-exceptions as
-        default for objc2 abi.
-        * config/darwin-c.c (darwin_cpp_builtins): Define OBJC_ZEROCOST_EXCEPTIONS
-        when zero-cost exception flag is on.
+	Radar 5023725
+	* c-opts.c: Remove flag_objc_zerocost_exceptions check.
+	* config/darwin.h
+	(OBJC_FLAG_ZEROCOST_EXCEPTIONS): New macro to issue diagnostic.
+	(OBJC_FLAG_OBJC_ABI): Set -fobjc-zerocost-exceptions as
+	default for objc2 abi.
+	* config/darwin-c.c (darwin_cpp_builtins): Define OBJC_ZEROCOST_EXCEPTIONS
+	when zero-cost exception flag is on.
 
 2007-04-10 Fariborz Jahanian <fjahanian@apple.com>
 
-        Fix bootstrap problem caused by radar 5096648.
-        * c-format.c (tm_p.h): Include it.
-        * config/darwin-protos.h: (objc_check_format_cfstring): Add decl.
+	Fix bootstrap problem caused by radar 5096648.
+	* c-format.c (tm_p.h): Include it.
+	* config/darwin-protos.h: (objc_check_format_cfstring): Add decl.
 
 2007-04-09 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 5096648
-        * c-format.c (tm_p.h): header file include.
-        (format_type): cfstring_format_type enum added.
-        (format_kind_info): New entry for CFString format added.
-        (objc_check_nsformat_arg): Renamed to objc_check_cfformat_arg
-        and modified.
-        (check_format_info): Added support for CFString format.
-        (handle_format_attribute): Ditto.
-        * c-common.h (objc_NSString_format): decl removed.
-        * stub-objc.c (objc_NSString_format): def removed.
-        * config/darwin.h (TARGET_CFSTRING_P): Removed.
-        (CHECK_FORMAT_CFSTRING, CFSTRING_TYPE_NODE): Added.
-        * Makefile.in (tmp.h): c-format.o now depends on.
-        * config/darwin-c.c (objc_check_format_cfstring): New
+	Radar 5096648
+	* c-format.c (tm_p.h): header file include.
+	(format_type): cfstring_format_type enum added.
+	(format_kind_info): New entry for CFString format added.
+	(objc_check_nsformat_arg): Renamed to objc_check_cfformat_arg
+	and modified.
+	(check_format_info): Added support for CFString format.
+	(handle_format_attribute): Ditto.
+	* c-common.h (objc_NSString_format): decl removed.
+	* stub-objc.c (objc_NSString_format): def removed.
+	* config/darwin.h (TARGET_CFSTRING_P): Removed.
+	(CHECK_FORMAT_CFSTRING, CFSTRING_TYPE_NODE): Added.
+	* Makefile.in (tmp.h): c-format.o now depends on.
+	* config/darwin-c.c (objc_check_format_cfstring): New
 
 2007-04-09  Mike Stump  <mrs@apple.com>
 
@@ -1570,7 +2453,7 @@
 
 2007-04-06 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4792158
+	Radar 4792158
 	* config/darwin.c: (output_objc_section_asm_op): Arrays tomark and tomarkv2 streamlined.
 	darwin_sections initializations streamlined.
 	(machopic_select_section): Switch to objc_v2_constant_string_object_section for objc2's
@@ -1586,17 +2469,17 @@
 
 2007-03-29  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4947014 - objc atomic property
-        * c-common.h (RID_NONATOMIC): Add
-        * c-parse.c (c_parser_objc_property_attribute) : Recognize 'nonatomic'
+	Radar 4947014 - objc atomic property
+	* c-common.h (RID_NONATOMIC): Add
+	* c-parse.c (c_parser_objc_property_attribute) : Recognize 'nonatomic'
 	as new property.
 
 2007-03-29 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4564694
-        * c-parse.c (c_parser_objc_class_instance_variables): Add @package
+	Radar 4564694
+	* c-parse.c (c_parser_objc_class_instance_variables): Add @package
 	support to syntax.
-        * c-common.h (RID_AT_PACKAGE): Add
+	* c-common.h (RID_AT_PACKAGE): Add
 
 2007-03-06  Mike Stump  <mrs@apple.com>
 
@@ -1606,51 +2489,51 @@
 
 2007-03-23  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4985544
-        * c-format.c (enum format_type): New entry for NSString format.
-        (format_typ): Has a new entry for NSString format.
-        (decode_format_attr): Error on use of NSString format on a
-        non-objective-c program.
-        (objc_check_nsformat_arg): New.
-        (check_format_info): Call back for NSString is objc_check_nsformat_arg
-        (handle_format_attribute): Use objc_check_format_nsstring for
-        NSString format.
-        * c-common.h (objc_NSString_format): New decl.
-        (objc_check_format_nsstring): New decl.
-        * stub-objc.c  (objc_NSString_format, objc_check_format_nsstring): New
-        stubs.
-        * config/darwin-protos.h (darwin_cfstring_type_node): New decl.
-        * config/darwin.c (darwin_cfstring_type_node): New
-        * config/darwin.h (TARGET_CFSTRING_P): New macro
+	Radar 4985544
+	* c-format.c (enum format_type): New entry for NSString format.
+	(format_typ): Has a new entry for NSString format.
+	(decode_format_attr): Error on use of NSString format on a
+	non-objective-c program.
+	(objc_check_nsformat_arg): New.
+	(check_format_info): Call back for NSString is objc_check_nsformat_arg
+	(handle_format_attribute): Use objc_check_format_nsstring for
+	NSString format.
+	* c-common.h (objc_NSString_format): New decl.
+	(objc_check_format_nsstring): New decl.
+	* stub-objc.c  (objc_NSString_format, objc_check_format_nsstring): New
+	stubs.
+	* config/darwin-protos.h (darwin_cfstring_type_node): New decl.
+	* config/darwin.c (darwin_cfstring_type_node): New
+	* config/darwin.h (TARGET_CFSTRING_P): New macro
 
 2007-03-22  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4965989
-        * c-parser.c (c_parser_objc_class_definition): Add supprt for anonymous
+	Radar 4965989
+	* c-parser.c (c_parser_objc_class_definition): Add supprt for anonymous
 	category syntax.
 
 2007-03-22  Fariborz Jahanian <fjahanian@apple.com>
 
-        Removed objc2 hybrid abi
-        * c-parsec (c_parser_struct_or_union_specifier): removed flag_objc_abi == 3.
-        * config/darwin-c.c: Removed checking for
-        hybrid abi.
-        * config/darwin.c: Ditto.
-        * config/darwin.h: Issue error if use of hybrid abi is
-        attempted. Removed checking for hybrid abi.
+	Removed objc2 hybrid abi
+	* c-parsec (c_parser_struct_or_union_specifier): removed flag_objc_abi == 3.
+	* config/darwin-c.c: Removed checking for
+	hybrid abi.
+	* config/darwin.c: Ditto.
+	* config/darwin.h: Issue error if use of hybrid abi is
+	attempted. Removed checking for hybrid abi.
 
 2007-03-21  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 2848255
+	Radar 2848255
 	* c-parser.c (c_parser_objc_try_catch_statement): Parse @catch(...).
-        * c.opt: Add -fobjc-zerocost-exceptions option.
-        * c-opts.c (c_common_post_options): Set the flags for
-        -fobjc-zerocost-exceptions.
-        * c-common.h: Add some declarations.
-        * stub-objc.c (objc2_valid_objc_catch_type, objc2_build_throw_call):
-        New stubs.
-        * config/darwin.h (OBJC_FLAG_OBJC_ABI): Check for proper
-        use of -fobjc-zerocost-exceptions option.
+	* c.opt: Add -fobjc-zerocost-exceptions option.
+	* c-opts.c (c_common_post_options): Set the flags for
+	-fobjc-zerocost-exceptions.
+	* c-common.h: Add some declarations.
+	* stub-objc.c (objc2_valid_objc_catch_type, objc2_build_throw_call):
+	New stubs.
+	* config/darwin.h (OBJC_FLAG_OBJC_ABI): Check for proper
+	use of -fobjc-zerocost-exceptions option.
 
 2007-03-21  Stuart Hastings  <stuart@apple.com>
 
@@ -1665,9 +2548,9 @@
 
 2007-03-14  Eric Christopher  <echristo@apple.com>
 
-        Radar 5006196
-        * cfgexpand.c (expand_used_vars): Do not create a guard
-        for iasm functions.
+	Radar 5006196
+	* cfgexpand.c (expand_used_vars): Do not create a guard
+	for iasm functions.
 
 2007-03-14  Hui-May Chang<hm.chang@apple.com>
 
@@ -1710,8 +2593,8 @@
 
 2007-02-06  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4949034
-        * c.opt: Update -fobjc-call-cxx-cdtors settings.
+	Radar 4949034
+	* c.opt: Update -fobjc-call-cxx-cdtors settings.
 
 2007-02-05  Hui-May Chang <hm.chang@apple.com>
 
@@ -1732,12 +2615,12 @@
 
 	Radar 4134510
 	* gcc/config/i386/i386.md (cmpstrsi): Prefer libcall for
-          indefinite or length > 30.
+	  indefinite or length > 30.
 
 2007-01-29  Bill Wendling  <wendling@apple.com>
 
-        * config/rs6000/t-darwin (DARWIN_EXTRA_CRT_BUILD_CFLAGS):
-        Removed extra def'n.
+	* config/rs6000/t-darwin (DARWIN_EXTRA_CRT_BUILD_CFLAGS):
+	Removed extra def'n.
 
 2007-01-24  Josh Conner  <jconner@apple.com>
 
@@ -1771,17 +2654,17 @@
 	Backport from mainline:
 	2007-01-17  Eric Christopher  <echristo@apple.com>
 
-        * config.gcc: Support core2 processor.
+	* config.gcc: Support core2 processor.
 
 2007-01-19  Eric Christopher  <echristo@apple.com>
 
 	Backport from mainline:
 	2007-01-15  Eric Christopher  <echristo@apple.com>
 
-        * config/darwin.h: Update copyright.
-        (TARGET_OPTION_TRANSLATE_TABLE): Add umbrella.
-        (LINK_COMMAND_SPEC): Add -u.
-        (LINK_SPEC): Fix umbrella for above.
+	* config/darwin.h: Update copyright.
+	(TARGET_OPTION_TRANSLATE_TABLE): Add umbrella.
+	(LINK_COMMAND_SPEC): Add -u.
+	(LINK_SPEC): Fix umbrella for above.
 
 2007-01-19  Eric Christopher  <echristo@apple.com>
 
@@ -1793,9 +2676,9 @@
 	Radar 4875159
 	Backport from mainline:
 	2007-01-18  Josh Conner  <jconner@apple.com>
-        PR target/30485
-        * config/rs6000/rs6000.c (rs6000_emit_vector_compare): Add
-        support for UNLE, UNLT, UNGE, and UNGT.
+	PR target/30485
+	* config/rs6000/rs6000.c (rs6000_emit_vector_compare): Add
+	support for UNLE, UNLT, UNGE, and UNGT.
 
 2007-01-15  Eric Christopher  <echristo@apple.com>
 
@@ -1875,7 +2758,7 @@
 	* passes.c (execute_todo): Remove TODO_write_loop_closed logic.
 	* tree-pass.h: Likewise.
 	* tree-ssa-loop-niter.c (unmark_surely_finite_loop): Remove
-        unneeded comments.
+	unneeded comments.
 	(maybe_mark_infinite_loops): Mark call to
 	builtin_maybe_infinite_loop for SSA renaming.
 	* tree-ssa-loop.c (tree_mark_maybe_inf_loops): Re-enable.
@@ -1886,7 +2769,7 @@
 
 	Radar 4859866
 	* opts.c (option_enabled):  Dump options that use the
-        access_flag mechanism.
+	access_flag mechanism.
 	* opt-functions.awk (switch_flags):  Handle CL_VARUINT,
 	CL_PERFUNC correctly.
 
@@ -1951,8 +2834,8 @@
 
 2006-12-14  Fariborz Jahanian <fjahania@apple.com>
 
-        Radar 4841447
-        * c.opt (-fobjc-new-property): Modified its language description
+	Radar 4841447
+	* c.opt (-fobjc-new-property): Modified its language description
 
 2006-12-14  Josh Conner  <jconner@apple.com>
 
@@ -1978,20 +2861,20 @@
 
 2006-12-13  Fariborz Jahanian <fjahania@apple.com>
 
-        Radar 4531086
-        * config/darwin.h (OBJC_WARN_OBJC2_FEATURES): New macro.
+	Radar 4531086
+	* config/darwin.h (OBJC_WARN_OBJC2_FEATURES): New macro.
 
 2006-12-13  Fariborz Jahanian <fjahania@apple.com>
 
-        Radar 4862848
-        * common.opt (flag_objc_abi): Defaulted to -1
-        * config/darwin.h (OBJC_FLAG_OBJC_ABI): New macro.
+	Radar 4862848
+	* common.opt (flag_objc_abi): Defaulted to -1
+	* config/darwin.h (OBJC_FLAG_OBJC_ABI): New macro.
 
 2006-12-12  Fariborz Jahanian <fjahanian@apple.com>
 
 	Radar 4865576
 	* tree.c (type_hash_eq): Check for TYPE_NAME of two colliding
-        tentative struct/union types.
+	tentative struct/union types.
 
 2006-12-11  Josh Conner  <jconner@apple.com>
 
@@ -2026,9 +2909,9 @@
 
 2006-12-07  Eric Christopher  <echristo@apple.com>
 
-        Radar 4869218
-        * doc/extend.texi: Replace mni with ssse3.
-        * doc/invoke.texi: Ditto.
+	Radar 4869218
+	* doc/extend.texi: Replace mni with ssse3.
+	* doc/invoke.texi: Ditto.
 
 2006-12-06  Dale Johannesen  <dalej@apple.com>
 
@@ -2046,7 +2929,7 @@
 
 	Radar 4859096
 	* c-typeck.c (build_modify_expr): Skip property calls
-        when checking for lvalue-ness.
+	when checking for lvalue-ness.
 	* c-common.h (objc_property_call): New decl.
 	* stub-objc.c (stub-objc.c): New function stub.
 	* c-parser.c (reswords): Add new objc property keywords.
@@ -2063,13 +2946,13 @@
 
 2006-11-15  Eric Christopher  <echristo@apple.com>
 
-        * config/darwin.h (LINK_COMMAND_SPEC): Remove {u*} from
-        options passed through.
+	* config/darwin.h (LINK_COMMAND_SPEC): Remove {u*} from
+	options passed through.
 
 2006-11-15  Eric Christopher  <echristo@apple.com>
 
-        Radar 4839411
-        * config/i386/tmmintrin.h: Depend on SSSE3.
+	Radar 4839411
+	* config/i386/tmmintrin.h: Depend on SSSE3.
 
 2006-11-15  Dale Johannesen  <dalej@apple.com>
 
@@ -2091,17 +2974,17 @@
 
 2006-10-05  Hui-May Chang  <hm.chang@apple.com>
 
-        Radar 4708086
-        * passes.c (MaxAlignForThisBlock, LargestAlignmentOfVariables):
-          Moved to local-alloc.c.
-          (rest_of_compilation) : patch involved save_PREFERRED_STACK_BOUNDARY
-          as moved to final.c.
-        * local-alloc.c (MaxAlignForThisBlock, LargestAlignmentOfVariables):
-          Moved from passes.c.
-        * final.c (rest_of_clean_state) : patch involved
+	Radar 4708086
+	* passes.c (MaxAlignForThisBlock, LargestAlignmentOfVariables):
+	  Moved to local-alloc.c.
+	  (rest_of_compilation) : patch involved save_PREFERRED_STACK_BOUNDARY
+	  as moved to final.c.
+	* local-alloc.c (MaxAlignForThisBlock, LargestAlignmentOfVariables):
+	  Moved from passes.c.
+	* final.c (rest_of_clean_state) : patch involved
 	   save_PREFERRED_STACK_BOUNDARY was moved from passes.c.
-        * i386.h : define SAVE_PREFERRED_STACK_BOUNDARY.
-        * i386.c : define ix86_preferred_stack_boundary.
+	* i386.h : define SAVE_PREFERRED_STACK_BOUNDARY.
+	* i386.c : define ix86_preferred_stack_boundary.
 
 
 2006-09-29  Hui-May Chang  <hm.chang@apple.com>
@@ -2117,7 +3000,7 @@
 
 1006-11-09  Fariborz Jahanian <fjahania@apple.com>
 
-        Radar 4810609
+	Radar 4810609
 	* c.opt (-fobjc-gc-only): New option
 	* doc/invoke.texi (Objective-C GC Options): Add -fobjc-gc-only.
 
@@ -2203,7 +3086,7 @@
 
 2006-11-01  Fariborz Jahanian <fjahania@apple.com>
 
-        Radar 4805321 (new property).
+	Radar 4805321 (new property).
 	* c-common.h (RID_AT_SYNTHESIZE, RID_AT_DYNAMIC,
 	RID_READWRITE, RID_ASSIGN, RID_RETAIN, RID_COPY): New enums.
 	(OBJC_IS_NEW_PATTR_KEYWORD): New macro.
@@ -2241,13 +3124,13 @@
 	Temporarily revert:
 	2006-09-25  Eric Christopher  <echristo@apple.com>
 
-        Radar 4574849
-        * config/t-slibgcc-darwin (SHLIB_LINK): Use
-        -dylib_install_name.
-        * config/darwin.h (LINK_COMMAND_SPEC): Remove use
-        of libtool.
-        (LINK_SPEC): Adjust options for above.
-        (STARTFILE_SPEC): Ditto.
+	Radar 4574849
+	* config/t-slibgcc-darwin (SHLIB_LINK): Use
+	-dylib_install_name.
+	* config/darwin.h (LINK_COMMAND_SPEC): Remove use
+	of libtool.
+	(LINK_SPEC): Adjust options for above.
+	(STARTFILE_SPEC): Ditto.
 
 2006-10-19  Caroline Tice  <ctice@apple.com>
 
@@ -2328,19 +3211,19 @@
 
 2006-10-09  Caroline Tice  <ctice@apple.com.
 
-        Radar 4771255
-        * dwarf2out.c (struct inlined_calls, inlined_calls_list,
+	Radar 4771255
+	* dwarf2out.c (struct inlined_calls, inlined_calls_list,
 	file_table_last_lookup):  Move to a point in the file outside
 	the #ifdef DWARF2_DEBUGGING_INFO clause.
 
 2006-10-06  Eric Christopher  <echristo@apple.com>
 
-        Radar 4755586
-        * config/i386/i386.h: Rename mni to ssse3.
-        * config/i386/i386.md: Ditto.
-        * config/i386/tmmintrin.h: Ditto.
-        * config/i386/i386.c: Ditto.
-        * config/i386/sse.md: Ditto.
+	Radar 4755586
+	* config/i386/i386.h: Rename mni to ssse3.
+	* config/i386/i386.md: Ditto.
+	* config/i386/tmmintrin.h: Ditto.
+	* config/i386/i386.c: Ditto.
+	* config/i386/sse.md: Ditto.
 
 2006-10-05  Dale Johannesen  <dalej@apple.com>
 
@@ -2455,7 +3338,7 @@
 
 2006-09-26  Fariborz Jahanian <fjahania@apple.com>
 
-        Radar 4733555
+	Radar 4733555
 	*config/darwin.c (darwin_handle_weak_import_attribute): Ignore 'weak_import'
 	on objc methods.
 
@@ -2487,13 +3370,13 @@
 
 2006-09-25  Eric Christopher  <echristo@apple.com>
 
-        Radar 4574849
-        * config/t-slibgcc-darwin (SHLIB_LINK): Use
-        -dylib_install_name.
-        * config/darwin.h (LINK_COMMAND_SPEC): Remove use
-        of libtool.
-        (LINK_SPEC): Adjust options for above.
-        (STARTFILE_SPEC): Ditto.
+	Radar 4574849
+	* config/t-slibgcc-darwin (SHLIB_LINK): Use
+	-dylib_install_name.
+	* config/darwin.h (LINK_COMMAND_SPEC): Remove use
+	of libtool.
+	(LINK_SPEC): Adjust options for above.
+	(STARTFILE_SPEC): Ditto.
 
 2006-09-25  Bill Wendling  <wendling@apple.com>
 
@@ -2516,21 +3399,21 @@
 
 2006-09-18  Fariborz Jahanian <fjahania@apple.com>
 
-        Radar 4667060
+	Radar 4667060
 	* c-gimplify.c (gimplify_c_loop): Add support for
 	setting of foreach loop controlling variable to 'nil' on
 	normal loop exit.
 
 2006-09-15  Fariborz Jahanian <fjahania@apple.com>
 
-        Radar 4727659
+	Radar 4727659
 	* c-common.c (handle_noreturn_attribute): Handle method_decl
 	nodes as well.
 
 2006-09-14  Bill Wendling  <wendling@apple.com>
 
-        Radar 4731660
-        * config/darwin.h (REDO_SECTION_INFO_P): Removed
+	Radar 4731660
+	* config/darwin.h (REDO_SECTION_INFO_P): Removed
 
 2006-09-11  Josh Conner  <jconner@apple.com>
 
@@ -2570,7 +3453,7 @@
 2006-09-06  Caroline Tice  <ctice@apple.com>
 
 	Radar 4707854
-        * dwarf2out.c (dwar2out_abstract_function):  Remove call_site test
+	* dwarf2out.c (dwar2out_abstract_function):  Remove call_site test
 	from condition determining if an abstract origin die needs to be
 	generated.
 
@@ -2592,15 +3475,15 @@
 
 006-09-01  Fariborz Jahanian <fjahania@apple.com>
 
-        Radar 4712269
-        * c-common.h (objc_build_incr_decr_setter_call): New decl.
-        * stub-objc.c (objc_build_incr_decr_setter_call): New stub.
-        * c-typeck.c (build_unary_op): Call objc_build_incr_decr_setter_call
-        for potential ince/decr pre/post expressions involving properties.
+	Radar 4712269
+	* c-common.h (objc_build_incr_decr_setter_call): New decl.
+	* stub-objc.c (objc_build_incr_decr_setter_call): New stub.
+	* c-typeck.c (build_unary_op): Call objc_build_incr_decr_setter_call
+	for potential ince/decr pre/post expressions involving properties.
 
 2006-08-31  Fariborz Jahanian  <fjahanian@apple.com>
 
-        Radar 4697411
+	Radar 4697411
 	* c-common.h (objc_volatilize_component_ref): New decl.
 	* c-typeck.c (build_component_ref): Call objc_volatilize_component_ref.
 	* stub-objc.c (objc_volatilize_component_ref): New stub.
@@ -2619,12 +3502,12 @@
 
 2006-08-28  Bill Wendling  <wendling@apple.com>
 
-        Radar 4679943
-        * doc/extend.texi (Structure-Packing Pragmas): Changed #pragma pack
-        documentation to reflect Apple's implementation.
-        * config/darwin-c.c (push_field_alignment, darwin_pragma_pack):
-        If #pragma pack([N]), don't clear out the natural alignment flag
-        on PPC64.
+	Radar 4679943
+	* doc/extend.texi (Structure-Packing Pragmas): Changed #pragma pack
+	documentation to reflect Apple's implementation.
+	* config/darwin-c.c (push_field_alignment, darwin_pragma_pack):
+	If #pragma pack([N]), don't clear out the natural alignment flag
+	on PPC64.
 
 2006-08-25  Fariborz Jahanian  <fjahanian@apple.com>
 
@@ -2640,12 +3523,12 @@
 
 2006-08-24  Bill Wendling <wendling@apple.com>
 
-        Radar 4699019
-        * doc/invoke.texi (C Language Options, Linker Options,
-        Warning Options): Removed -Wpragma-once, -no-c++filt,
-        and -Wpragma-once options' documentation.
-        * gcc/common.opt (fppc): Removed fppc flag.
-        * gcc/toplev.c (flag_fppc): Removed flag_fppc variable.
+	Radar 4699019
+	* doc/invoke.texi (C Language Options, Linker Options,
+	Warning Options): Removed -Wpragma-once, -no-c++filt,
+	and -Wpragma-once options' documentation.
+	* gcc/common.opt (fppc): Removed fppc flag.
+	* gcc/toplev.c (flag_fppc): Removed flag_fppc variable.
 
 2006-08-22  Hui-May Chang  <hm.chang@apple.com>
 
@@ -2675,7 +3558,7 @@
 
 	Radar 4106131
 	* gcc/config/i386/darwin.h (TARGET_DEEP_BRANCH_PREDICTION):
-        Remove NOCONA.
+	Remove NOCONA.
 	* gcc/testsuite/gcc.apple/execute/picbase-1.c (xsqrt): Replace
 	references to __builtin functions with their portable
 	equivalents.
@@ -2788,11 +3671,11 @@
 
 2006-07-18  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4592503
-        * c-decl.c (finish_struct): Check on illegal use of __weak
-        on struct fields.
-        * decl.c (start_decl): Check on illegal use of __weak on
-        variable declarations.
+	Radar 4592503
+	* c-decl.c (finish_struct): Check on illegal use of __weak
+	on struct fields.
+	* decl.c (start_decl): Check on illegal use of __weak on
+	variable declarations.
 	* stub-objc.c (objc_checkon_weak_attribute): New stub.
 	* c-common.h (objc_checkon_weak_attribute): New decl.
 
@@ -2898,7 +3781,7 @@
 
 2006-07-07  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4585769
+	Radar 4585769
 	* config/darwin-protos.h: New declarations.
 	* config/darwin.c (machopic_select_section): New sections
 	for objc1 extensions.
@@ -2921,7 +3804,7 @@
 
 2006-06-27  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4600999
+	Radar 4600999
 	* config/darwin.c (darwin_handle_objc_gc_attribute): Fix main variant
 	after attribute insertion.
 
@@ -3059,9 +3942,9 @@
 
 2006-06-01 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4570979
+	Radar 4570979
 	* config/darwin.h: Change certain 'type' of objc2 sections
-        to 'regular' from 'literal_pointers' (reversing radar
+	to 'regular' from 'literal_pointers' (reversing radar
 	4561264)..
 
 2006-06-01 Hui-May Chang <hm.chang@apple.com>
@@ -3209,11 +4092,11 @@
 
 2006-05-08 Fariborz Jahanian <fjahanian@apple.com>
 
-        radar 4535676
-        * config/darwin-protos.h: New declarations.
-        * config/darwin.c (machopic_select_section): Code to generate
-        new section __super_refs.
-        * config/darwin.h: Macros for new section declarations.
+	radar 4535676
+	* config/darwin-protos.h: New declarations.
+	* config/darwin.c (machopic_select_section): Code to generate
+	new section __super_refs.
+	* config/darwin.h: Macros for new section declarations.
 
 2006-05-05 Fariborz Jahanian <fjahanian@apple.com>
 
@@ -3234,7 +4117,7 @@
 
 2006-04-28 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4512786
+	Radar 4512786
 	* doc/invoke.texi (fobjc-exceptions): Say it is
 	on by default.
 
@@ -3254,7 +4137,7 @@
 2006-04-13  Devang Patel  <dpatel@apple.com>
 
 	Radar 4503682
-        * c-lex.c (c_lex_with_flags): CPP_BINCL and CPP_EINCL tokens do not block PCH.
+	* c-lex.c (c_lex_with_flags): CPP_BINCL and CPP_EINCL tokens do not block PCH.
 
 2006-04-12  Devang Patel  <dpatel@apple.com>
 
@@ -3288,33 +4171,33 @@
 
 2006-04-13 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4502236
+	Radar 4502236
 	* c-parse.in (c99_block_lineno_labeled_stmt): Pass same flags to
 	c_end_compound_stmt to match c_begin_compound_stmt.
 
 2006-04-12 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4507230
+	Radar 4507230
 	* c-common.h (objc_type_valid_for_messaging): Declare.
 	* stub-objc.c (objc_type_valid_for_messaging): New stub.
 
 2006-04-06 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4436866
-        (Missing copies attribute)
+	Radar 4436866
+	(Missing copies attribute)
 	* c-parse.in: Add grammer for 'copies' attribute.
 	* c-common.h (RID_COPIES): New enumerator.
 
 2006-04-04 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4498373
-        (Metadata for objective-c properties)
+	Radar 4498373
+	(Metadata for objective-c properties)
 	* config/darwin.c (machopic_select_section): Put metadata
 	name/attribute strings in .data section.
 
 2006-03-29 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4493912
+	Radar 4493912
 	* config/darwin.c (darwin_init_cfstring_builtins): Make type of
 	CFString.length 'long'.
 	(darwin_init_cfstring_builtins): Initialize CFString.length to
@@ -3322,7 +4205,7 @@
 
 2006-03-27 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4133425
+	Radar 4133425
 	* c-common.h (objc_diagnose_private_ivar): New decl.
 	* stub-objc.c (objc_diagnose_private_ivar): New stub.
 	* c-decl.c (undeclared_variable): Issue disnostic on
@@ -3337,12 +4220,12 @@
 2006-03-24  Devang Patel  <dpatel@apple.com>
 
 	Radar 4485223
-        * opts.c (decode_options): Issue warning if -ftree-vectorize
-        overrides -fno-strict-aliasing.
+	* opts.c (decode_options): Issue warning if -ftree-vectorize
+	overrides -fno-strict-aliasing.
 
 2006-03-23 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4193359
+	Radar 4193359
 	* c-typeck.c (convert_for_assignment): Remove Objective-C EH machinery
 	'volatile' qualifier before doing type comparison.
 
@@ -3360,7 +4243,7 @@
 
 2006-03-22 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4436866
+	Radar 4436866
 	* c-parse.in: Add all the needed grammar and lexical support for
 	objective-c @property.
 	* c-typeck.c (build_component_ref): Call objc_build_getter_call.
@@ -3385,7 +4268,7 @@
 
 2006-03-08 Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4468456
+	Radar 4468456
 	* c-gimplify.c (gimplify_c_loop): 'continue' label is generated
 	as in normal case and belongs to current loop.
 
@@ -3407,16 +4290,16 @@
   	    Ziemowit Laski  <zlaski@apple.com>
 
 	Radar 4137741
-        * Makefile.in (c-lex.o): Revert langhooks.h dependency.
-        (langhooks.o): Revert debug.h dependency.
-        * c-lex.c: Do not include langhooks.h.
-        (fe_file_change): Revert lang_hooks calls; issue debug_hooks
-        calls only if defer_file_change_debug_hooks flag is cleared.
-        (c_lex_with_flags): Propagate line number information for
-        CPP_BINCL and CPP_EINCL tokens.
-        * langhooks-def.h: Revert Radar 4133801 changes.
-        * langhooks.c: Likewise.
-        * langhooks.h: Likewise.
+	* Makefile.in (c-lex.o): Revert langhooks.h dependency.
+	(langhooks.o): Revert debug.h dependency.
+	* c-lex.c: Do not include langhooks.h.
+	(fe_file_change): Revert lang_hooks calls; issue debug_hooks
+	calls only if defer_file_change_debug_hooks flag is cleared.
+	(c_lex_with_flags): Propagate line number information for
+	CPP_BINCL and CPP_EINCL tokens.
+	* langhooks-def.h: Revert Radar 4133801 changes.
+	* langhooks.c: Likewise.
+	* langhooks.h: Likewise.
 
 2006-02-15   Fariborz Jahanian <fjahanian@apple.com>
 
@@ -3472,7 +4355,7 @@
 
 2006-01-30  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4386773
+	Radar 4386773
 	* c-common.h (RID_AT_OPTIONAL, RID_AT_REQUIRED): Two new
 	objective-c keywords.
 	(objc_set_method_opt): New declaration.
@@ -3486,8 +4369,8 @@
 
 2006-01-23  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4391705
-        * config/darwin-protos.h
+	Radar 4391705
+	* config/darwin-protos.h
 	(objc_v2_selector_refs_section): New declaration.
 	* config/darwin.c: use section __OBJC2,__selector_refs for
 	@selector expressions in new-ABI and hybrid-ABI.
@@ -3497,7 +4380,7 @@
 
 2006-01-18  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4294910
+	Radar 4294910
 	* c-parse.in: Add grammar supprt for the foreach initialization
 	part.
 	* c-gimplify.c (obj_reuse_bc_block): New function.
@@ -3535,9 +4418,9 @@
 
 2005-12-06  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4360146
-        * c-common.h (objc_v2_build_ivar_ref): New declaration.
-        * stub-objc.c (objc_v2_build_ivar_ref): New stub.
+	Radar 4360146
+	* c-common.h (objc_v2_build_ivar_ref): New declaration.
+	* stub-objc.c (objc_v2_build_ivar_ref): New stub.
 	* c-typeck.c (build_component_ref): Generate the new ivar reference
 	tree.
 
@@ -3738,7 +4621,7 @@
 	Radar 4434601
 	Backport from mainline:
 	2006-01-19  Jan Hubicka  <jh@suse.cz>
-            H.J. Lu  <hongjiu.lu@intel.com>
+	    H.J. Lu  <hongjiu.lu@intel.com>
 	    Evandro Menezes <evandro.menezes@amd.com>
 
 	* invoke.texi (generic): Document
@@ -3798,16 +4681,16 @@
 
 2006-05-02  Eric Christopher  <echristo@apple.com>
 
-        Radar 4533898
-        * global.c (flag_cw_asm_blocks): Change to
-        flag_iasm_blocks.
-        * config/i386/i386.h (IASM_VALID_PIC): Move...
-        * config/i386/darwin.h: ... here.
+	Radar 4533898
+	* global.c (flag_cw_asm_blocks): Change to
+	flag_iasm_blocks.
+	* config/i386/i386.h (IASM_VALID_PIC): Move...
+	* config/i386/darwin.h: ... here.
 
 2006-05-01  Eric Christopher  <echristo@apple.com>
 
-        Radar 4533757
-        * global.c (flag_cw_asm_blocks): Declare.
+	Radar 4533757
+	* global.c (flag_cw_asm_blocks): Declare.
 
 2006-04-10  Eric Christopher  <echristo@apple.com>
 
@@ -4161,7 +5044,7 @@
 2006-04-18  Stuart Hastings  <stuart@apple.com>
 
 	Radar 4505290
-        * config/rs6000/rs6000.c (rs6000_initialize_trampoline): Use
+	* config/rs6000/rs6000.c (rs6000_initialize_trampoline): Use
 	pmode for SYMBOL_REFs.
 
 2006-04-18  Dale Johannesen  <dalej@apple.com>
@@ -4173,11 +5056,11 @@
 2006-04-18  Stuart Hastings  <stuart@apple.com>
 
 	Radar 4505290
-        * config/rs6000/t-darwin (DARWIN_EXTRA_CRT_BUILD_CFLAGS): New.
-        * config/t-darwin (crt3.o): Use it.
-        * config/rs6000/rs6000.md (call_indirect_nonlocal_sysv,
-        call_nonlocal_sysv, call_value_indirect_nonlocal_sysv,
-        call_value_nonlocal_sysv, sibcall_nonlocal_sysv,
+	* config/rs6000/t-darwin (DARWIN_EXTRA_CRT_BUILD_CFLAGS): New.
+	* config/t-darwin (crt3.o): Use it.
+	* config/rs6000/rs6000.md (call_indirect_nonlocal_sysv,
+	call_nonlocal_sysv, call_value_indirect_nonlocal_sysv,
+	call_value_nonlocal_sysv, sibcall_nonlocal_sysv,
 	sibcall_value_nonlocal_sysv): Use the P macro for 32/64 support.
 
 2006-04-18  Devang Patel  <dpatel@apple.com>
@@ -4367,8 +5250,8 @@
 
 2005-12-16  Jeff Law  <law@redhat.com>
 
-        * tree-ssa-dse.c (dse_optimize_stmt): Correctly handle PHI nodes which
-        represent a use and definition of the same SSA_NAME.
+	* tree-ssa-dse.c (dse_optimize_stmt): Correctly handle PHI nodes which
+	represent a use and definition of the same SSA_NAME.
 
 2006-02-28  Stuart Hastings  <stuart@apple.com>
 
@@ -4381,15 +5264,15 @@
 	    Dorit Nuzman  <dorit@apple.com>
 
 	Radar 4375453
-        * targhooks.h (vector_alignment_reachable): New.
-        * targhooks.c (default_vector_alignment_reachable): New.
-        * target.h (gcc_target): Add vector_alignment_reachable.
-        * target-def.h (TARGET_VECTOR_ALIGNMENT_REACHABLE): New.
-        * tree-vect-analyze.c (vect_enhance_data_refs_alignment): Avoid
-        peeling when natural alignment is not reachable due to known
-        misalignment. Use target hook to check unknown alignment.
-        * config/rs6000.c (TARGET_VECTOR_ALIGNMENT_REACHABLE,
-        rs6000_vector_alignment_reachable): New.
+	* targhooks.h (vector_alignment_reachable): New.
+	* targhooks.c (default_vector_alignment_reachable): New.
+	* target.h (gcc_target): Add vector_alignment_reachable.
+	* target-def.h (TARGET_VECTOR_ALIGNMENT_REACHABLE): New.
+	* tree-vect-analyze.c (vect_enhance_data_refs_alignment): Avoid
+	peeling when natural alignment is not reachable due to known
+	misalignment. Use target hook to check unknown alignment.
+	* config/rs6000.c (TARGET_VECTOR_ALIGNMENT_REACHABLE,
+	rs6000_vector_alignment_reachable): New.
 
 2006-02-27  Stuart Hastings  <stuart@apple.com>
 
@@ -4545,7 +5428,7 @@
 
 2006-02-10  Dale Johannesen  <dalej@apple.com>
 
-        Radar 4420531
+	Radar 4420531
 	* doc/invoke.texi:  Warn that -ftree-loop-linear is buggy.
 
 2006-02-10  Dale Johannesen  <dalej@apple.com>
@@ -4670,8 +5553,8 @@
 
 2006-01-23  Devang Patel  <dpatel@apple.com>
 
-        Radar 4334498
-        * dbxout.c (dbxout_init): Queue void type.
+	Radar 4334498
+	* dbxout.c (dbxout_init): Queue void type.
 
 2006-01-23  Dale Johannesen  <dalej@apple.com>
 
@@ -4867,8 +5750,8 @@
 2005-12-09  Zdenek Dvorak <rakdver@gcc.gnu.org>
 
 	Radar 4233898
-        * tree-chrec.c (chrec_fold_multiply_poly_poly): Associate chrecs
-        correctly.
+	* tree-chrec.c (chrec_fold_multiply_poly_poly): Associate chrecs
+	correctly.
 
 2005-12-09  Stuart Hastings  <stuart@apple.com>
 
@@ -4913,17 +5796,17 @@
 2005-12-07  Devang Patel  <dpatel@apple.com>
    	    Ziemowit Laski  <zlaski@apple.com>
 
-        Radar 4137741
-        * Makefile.in (c-lex.o): Revert langhooks.h dependency.
-        (langhooks.o): Revert debug.h dependency.
-        * c-lex.c: Do not include langhooks.h.
-        (fe_file_change): Revert lang_hooks calls; issue debug_hooks
-        calls only if defer_file_change_debug_hooks flag is cleared.
-        (c_lex_with_flags): Propagate line number information for
-        CPP_BINCL and CPP_EINCL tokens.
-        * langhooks-def.h: Revert Radar 4133801 changes.
-        * langhooks.c: Likewise.
-        * langhooks.h: Likewise.
+	Radar 4137741
+	* Makefile.in (c-lex.o): Revert langhooks.h dependency.
+	(langhooks.o): Revert debug.h dependency.
+	* c-lex.c: Do not include langhooks.h.
+	(fe_file_change): Revert lang_hooks calls; issue debug_hooks
+	calls only if defer_file_change_debug_hooks flag is cleared.
+	(c_lex_with_flags): Propagate line number information for
+	CPP_BINCL and CPP_EINCL tokens.
+	* langhooks-def.h: Revert Radar 4133801 changes.
+	* langhooks.c: Likewise.
+	* langhooks.h: Likewise.
 
 2005-12-07  Dale Johannesen  <dalej@apple.com>
 
@@ -4990,7 +5873,7 @@
 	when nested functions are on.
 
 2005-11-30  Dale Johannesen  <dalej@apple.com>
-            Andrew Pinski  <pinskia@physics.uc.edu>
+	    Andrew Pinski  <pinskia@physics.uc.edu>
 
 	Radar 4347034
 	* combine.c (find_split_point):  Sign extend bitmask
@@ -5014,8 +5897,8 @@
 2005-11-18  Eric Christopher  <echristo@apple.com>
 
 	Radar 4324160
-        * config/i386/i386.md (*zero_extendqihi2_movzbw): Avoid partial
-        register stalls by zero extending to the full register.
+	* config/i386/i386.md (*zero_extendqihi2_movzbw): Avoid partial
+	register stalls by zero extending to the full register.
 
 2005-11-17  Devang Patel  <dpatel@apple.com>
 
@@ -5043,9 +5926,9 @@
 
 2005-11-15  Dale Johannesen  <dalej@apple.com>
 
-        * config/darwin-c.c (darwin_pragma_call_on_load):
-        Give an error for 64-bit targets.
-        (darwin_pragma_call_on_unload):  Ditto.
+	* config/darwin-c.c (darwin_pragma_call_on_load):
+	Give an error for 64-bit targets.
+	(darwin_pragma_call_on_unload):  Ditto.
 
 2005-11-15  Dale Johannesen  <dalej@apple.com>
 
@@ -5110,7 +5993,7 @@
 
 2005-11-08  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4330422
+	Radar 4330422
 
 	* c-common.h (objc_non_volatilized_type): New declaration
 	* stub-objc.c (objc_non_volatilized_type): New stub.
@@ -5121,35 +6004,35 @@
 	* config/i386/i386.c (standard_sse_constant_p) Check for vector
 	constant -1.
 	(standard_sse_constant_opcode) New function to return the opcode
-        associated with standard_sse_constant_p.
-        (ix86_expand_vector_move) Use standard_sse_constant_p.
-        * config/i386/predicates.md (vector_move_operand) Use
+	associated with standard_sse_constant_p.
+	(ix86_expand_vector_move) Use standard_sse_constant_p.
+	* config/i386/predicates.md (vector_move_operand) Use
 	standard_sse_constant_p.
 	(nonimmediate_or_0_operand) Return true if operand is a nonimmediate
 	or a constant zero.
-        * config/i386/sse.md (*mov<mode>_internal) Use
+	* config/i386/sse.md (*mov<mode>_internal) Use
 	standard_sse_constant_opcode.
-        (*movv4sf_internal) Use standard_sse_constant_opcode.
-        (*movv2df_internal) Use standard_sse_constant_opcode.
+	(*movv4sf_internal) Use standard_sse_constant_opcode.
+	(*movv2df_internal) Use standard_sse_constant_opcode.
 	(sse_movlhps) Replace vector_move_operand with
 	nonimmediate_or_0_operand.
 	(*sse_concatv2sf) Replace vector_move_operand with
 	nonimmediate_or_0_operand.
-        (*vec_setv4sf_0) Replace vector_move_operand with
+	(*vec_setv4sf_0) Replace vector_move_operand with
 	nonimmediate_or_0_operand.
-        (sse2_loadlpd) Replace vector_move_operand with
+	(sse2_loadlpd) Replace vector_move_operand with
 	nonimmediate_or_0_operand.
-        (*vec_concatv2df) Replace vector_move_operand with
+	(*vec_concatv2df) Replace vector_move_operand with
 	nonimmediate_or_0_operand.
 	(sse2_loadld) Replace vector_move_operand with
 	nonimmediate_or_0_operand.
-        (*vec_concatv2di) Replace vector_move_operand with
+	(*vec_concatv2di) Replace vector_move_operand with
 	nonimmediate_or_0_operand.
 	* testsuite/gcc.apple/4283414.c: New.
 
 2005-11-01  Fariborz Jahanian <fjahanian@apple.com>
 
-        objc new meta-data definitions - part 1
+	objc new meta-data definitions - part 1
 
 	* common.opt: Add new -fobjc-abi-version=n option.
 
@@ -5172,26 +6055,26 @@
 	Radar 4053179
 	Backport from Mainline.
 	2005-04-14  Richard Henderson  <rth@redhat.com>
-        * config/i386/i386.c (ix86_prepare_sse_fp_compare_args): Split ...
-        (ix86_expand_sse_fp_minmax): ... from ...
-        (ix86_expand_fp_movcc): ... here.
-        (ix86_expand_sse_movcc): Rewrite from ix86_split_sse_movcc.
-        * config/i386/i386-protos.h: Update.
-        * config/i386/i386.md (UNSPEC_IEEE_MIN, UNSPEC_IEEE_MAX): New.
-        (sse_setccsf, sse_setccdf): Allow before reload.
-        (movsfcc_1_sse_min, movsfcc_1_sse_max, movsfcc_1_sse): Remove.
-        (movdfcc_1_sse_min, movdfcc_1_sse_max, movdfcc_1_sse): Remove.
-        (ieee_sminsf3, ieee_smaxsf3, ieee_smindf3, ieee_smaxdf3): New.
-        * config/i386/sse.md (andsf3, nandsf3, iorsf3, xorsf3): New.
-        (anddf3, nanddf3, iordf3, xordf3): New.
-        * config/i386/i386.c (ix86_expand_sse_cmp): Split out from ...
-        (ix86_expand_sse_movcc): ... here.  Take cmp as a pre-computed
-        register.
-        (ix86_expand_fp_movcc): Update to match.
-        (ix86_expand_fp_vcond, ix86_expand_int_vcond): New.
-        * config/i386/i386-protos.h: Update.
-        * config/i386/sse.md (vcondv4sf, vcondv2df): New.
-        (vcond<SSEMODE124>, vcondu<SSEMODE12>): New.
+	* config/i386/i386.c (ix86_prepare_sse_fp_compare_args): Split ...
+	(ix86_expand_sse_fp_minmax): ... from ...
+	(ix86_expand_fp_movcc): ... here.
+	(ix86_expand_sse_movcc): Rewrite from ix86_split_sse_movcc.
+	* config/i386/i386-protos.h: Update.
+	* config/i386/i386.md (UNSPEC_IEEE_MIN, UNSPEC_IEEE_MAX): New.
+	(sse_setccsf, sse_setccdf): Allow before reload.
+	(movsfcc_1_sse_min, movsfcc_1_sse_max, movsfcc_1_sse): Remove.
+	(movdfcc_1_sse_min, movdfcc_1_sse_max, movdfcc_1_sse): Remove.
+	(ieee_sminsf3, ieee_smaxsf3, ieee_smindf3, ieee_smaxdf3): New.
+	* config/i386/sse.md (andsf3, nandsf3, iorsf3, xorsf3): New.
+	(anddf3, nanddf3, iordf3, xordf3): New.
+	* config/i386/i386.c (ix86_expand_sse_cmp): Split out from ...
+	(ix86_expand_sse_movcc): ... here.  Take cmp as a pre-computed
+	register.
+	(ix86_expand_fp_movcc): Update to match.
+	(ix86_expand_fp_vcond, ix86_expand_int_vcond): New.
+	* config/i386/i386-protos.h: Update.
+	* config/i386/sse.md (vcondv4sf, vcondv2df): New.
+	(vcond<SSEMODE124>, vcondu<SSEMODE12>): New.
 
 2005-10-31  Devang Patel  <dpatel@apple.com>
 
@@ -5374,8 +6257,8 @@
 
 2005-10-14  Devang Patel  <dpatel@apple.com>
 
-        Radar 4300871
-        * dbxout.c (dbxout_start_source_file): Flush type queue.
+	Radar 4300871
+	* dbxout.c (dbxout_start_source_file): Flush type queue.
 
 2005-10-13  Stuart Hastings  <stuart@apple.com>
 
@@ -5429,7 +6312,7 @@
 
 2005-10-07  Evan Cheng  <evan.cheng@apple.com>
 
-        Radar 4109832
+	Radar 4109832
 	* config/i386/xmmintrin.h (_MM_TRANSPOSE4_PS): Rewrite using high/low
 	moves and unpack to speed up.
 
@@ -5450,11 +6333,11 @@
 
 2005-10-04  Devang Patel  <dpatel@apple.com>
 
-        Radar 4278470
-        * dbxout.c (dbxut_init): Flush type queue.
-        (type_queue, type_queue_index, type_queue_size): GTY'ed.
-        (dbxout_queue_type): Use ggc_realloc.
-        (dbxout_free_type_queue): Use ggc_free.
+	Radar 4278470
+	* dbxout.c (dbxut_init): Flush type queue.
+	(type_queue, type_queue_index, type_queue_size): GTY'ed.
+	(dbxout_queue_type): Use ggc_realloc.
+	(dbxout_free_type_queue): Use ggc_free.
 
 2005-01-03  Devang Patel  <dpatel@apple.com>
 
@@ -5481,7 +6364,7 @@
 2005-09-28  Devang Patel  <dpatel@apple.com>
 
 	Radar 4263352
-        * config/darwin-driver.c (GTY): Define empty macro.
+	* config/darwin-driver.c (GTY): Define empty macro.
 
 2005-09-29  Ziemowit Laski  <zlaski@apple.com>
 
@@ -5498,7 +6381,7 @@
 2005-09-28  Devang Patel  <dpatel@apple.com>
 
 	Radar 4263352
-        * config/darwin.h (darwin_reverse_bitfields): Add GTY marker.
+	* config/darwin.h (darwin_reverse_bitfields): Add GTY marker.
 
 2005-09-28  Devang Patel  <dpatel@apple.com>
 
@@ -5526,8 +6409,8 @@
 
 	PR target/23847
 	Radar 4263935
-        * config/rs6000/rs6000.c (rs6000_function_value): Parallel pattern
-        for __complex__ double in -mcpu=G5 mode.
+	* config/rs6000/rs6000.c (rs6000_function_value): Parallel pattern
+	for __complex__ double in -mcpu=G5 mode.
 
 2005-09-26  Stuart Hastings  <stuart@apple.com>
 
@@ -5684,30 +6567,30 @@
 
 2005-09-21    Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4043818 (pr19653)
-        * /config/i386/mmx.md (mov<mode>_internal): Make cost of 'y' (mmx_regs)
-        computable.
+	Radar 4043818 (pr19653)
+	* /config/i386/mmx.md (mov<mode>_internal): Make cost of 'y' (mmx_regs)
+	computable.
 
 2005-08-31  Richard Henderson  <rth@redhat.com>
 
-        Radar 4043818 (pr19653)
-        * expr.c (expand_expr_real_1) <VIEW_CONVERT_EXPR>: Force subregs
-        into a pseudo before applying gen_lowpart.
+	Radar 4043818 (pr19653)
+	* expr.c (expand_expr_real_1) <VIEW_CONVERT_EXPR>: Force subregs
+	into a pseudo before applying gen_lowpart.
 
 2005-08-30  Richard Henderson  <rth@redhat.com>
 
-        Radar 4043818 (pr19653)
-        PR target/23630
-        * expr.c (expand_expr_real_1) <VIEW_CONVERT_EXPR>: Use gen_lowpart
-        whenever the mode sizes match.
+	Radar 4043818 (pr19653)
+	PR target/23630
+	* expr.c (expand_expr_real_1) <VIEW_CONVERT_EXPR>: Use gen_lowpart
+	whenever the mode sizes match.
 
 2005-08-23  Paolo Bonzini  <bonzini@gnu.org>
 
-        Radar 4043818 (pr19653)
-        PR middle-end/23517
-        * fold-const.c (fold_convert): Use VIEW_CONVERT_EXPR to convert
-        between vectors.
-        * convert.c (convert_to_integer, convert_to_vector): Likewise.
+	Radar 4043818 (pr19653)
+	PR middle-end/23517
+	* fold-const.c (fold_convert): Use VIEW_CONVERT_EXPR to convert
+	between vectors.
+	* convert.c (convert_to_integer, convert_to_vector): Likewise.
 
 2005-09-19  Devang Patel  <dpatel@apple.com>
 
@@ -5724,25 +6607,25 @@
 
 2005-09-15  Devang Patel  <dpatel@apple.com>
 
-        dbxout_type rewrite.
-        * dbxout.c (enum typestatus): Add TYPE_QUEUED.
-        (dbxout_type):Rewrite. Use dbxout_partial_type and dbxout_complete_type
-        to do actual work.
-        (dbxout_partial_type, dbxout_complete_type, dbxout_type_xref,
-        dbxout_pointer_type, dbxout_void_type, dbxout_integer_type,
-        dbxout_real_type, dbxout_char_type, dbxout_complex_type,
-        dbxout_file_type, dbxout_function_type, dbxout_reference_type,
-        dbxout_next_type_number, dbxout_cross_ref_type_p, dbxout_type_with_name,
-        dbxout_queue_type, dbxout_free_type_queue): New.
-        (dbxout_function_end): Flush type queue.
-        (dbxout_end_source_file): Same.
-        * final.c (debug_flush_symbol_queue): Same.
-        * debug.h (dbxout_flush_type_queue): New.
+	dbxout_type rewrite.
+	* dbxout.c (enum typestatus): Add TYPE_QUEUED.
+	(dbxout_type):Rewrite. Use dbxout_partial_type and dbxout_complete_type
+	to do actual work.
+	(dbxout_partial_type, dbxout_complete_type, dbxout_type_xref,
+	dbxout_pointer_type, dbxout_void_type, dbxout_integer_type,
+	dbxout_real_type, dbxout_char_type, dbxout_complex_type,
+	dbxout_file_type, dbxout_function_type, dbxout_reference_type,
+	dbxout_next_type_number, dbxout_cross_ref_type_p, dbxout_type_with_name,
+	dbxout_queue_type, dbxout_free_type_queue): New.
+	(dbxout_function_end): Flush type queue.
+	(dbxout_end_source_file): Same.
+	* final.c (debug_flush_symbol_queue): Same.
+	* debug.h (dbxout_flush_type_queue): New.
 
 2005-09-15  Devang Patel  <dpatel@apple.com>
 
-        Radar 4241538
-        * config/rs600.c (altivec_cov_rt_2p): Check NULL_TREE.
+	Radar 4241538
+	* config/rs600.c (altivec_cov_rt_2p): Check NULL_TREE.
 
 2005-09-08  Dale Johannesen  <dalej@apple.com>
 
@@ -5779,8 +6662,8 @@
 
 2005-08-31  Mike Stump  <mrs@apple.com>
 
-        Radar 4239455
-        * i386/i386.h (TARGET_CW_OP_CONSTRAINT): Sort.
+	Radar 4239455
+	* i386/i386.h (TARGET_CW_OP_CONSTRAINT): Sort.
 
 2005-08-31  Dale Johannesen  <dalej@apple.com>
 
@@ -5972,9 +6855,9 @@
 2005-08-12  Devang Patel  <dpatel@apple.com>
 
 	Radar 4209318
-        * dbxout.c (dbxout_type): Update this function to force type definition
-        in new LSYM stab.
-        (dbxout_symbol): Set TREE_ASM_WRITTEN only if did_output is true.
+	* dbxout.c (dbxout_type): Update this function to force type definition
+	in new LSYM stab.
+	(dbxout_symbol): Set TREE_ASM_WRITTEN only if did_output is true.
 
 2005-08-10  Dale Johannesen  <dalej@apple.com>
 
@@ -6106,18 +6989,18 @@
 2005-07-30  Fariborz Jahanian <fjahanian@apple.com>
 
 	Radar 4152603
-        * c-common.c (c_common_att): New entry added for "nodebug".
-        (handle_nodebug_attribute): New function.
-        * tree-inline.c (call_location_p, call_location): New fields in
-        struct inline_data.
-        (copy_body_r): Set new location of copied tree, if available.
-        (expand_call_inline): If callee's '__nodebug__' attribute is
-        set, use caller's input_location for copied trees.
-        * config/i386/emmintrin.h: All intrinsic functions have
-        "__nodebug__" Added to their declarations.
-        * config/i386/mmintrin.h: Ditto.
-        * config/i386/pmmintrin.h: Ditto.
-        * config/i386/xmmintrin.h: Ditto.
+	* c-common.c (c_common_att): New entry added for "nodebug".
+	(handle_nodebug_attribute): New function.
+	* tree-inline.c (call_location_p, call_location): New fields in
+	struct inline_data.
+	(copy_body_r): Set new location of copied tree, if available.
+	(expand_call_inline): If callee's '__nodebug__' attribute is
+	set, use caller's input_location for copied trees.
+	* config/i386/emmintrin.h: All intrinsic functions have
+	"__nodebug__" Added to their declarations.
+	* config/i386/mmintrin.h: Ditto.
+	* config/i386/pmmintrin.h: Ditto.
+	* config/i386/xmmintrin.h: Ditto.
 
 2005-07-29  Devang Patel  <dpatel@apple.com>
 
@@ -6145,7 +7028,7 @@
 
 2005-07-21  Fariborz Jahanian <fjahanian@apple.com>
 
-        Radar 4187164
+	Radar 4187164
 	* c-common.c (print_cw_asm_operand): Recognize and handle a PIC address
 	expression.
 	* c-typeck.c (parser_build_binary_op): Generate PIC address tree.
@@ -6275,18 +7158,18 @@
 	stabs when symbol separation is ON.
 
 2005-07-06  Dale Johannesen  <dalej@apple.com>
-            Andrew Pinski  <pinskia@physics.uc.edu>
+	    Andrew Pinski  <pinskia@physics.uc.edu>
 
-        Radar 4158356
-        * tree-sra.c (enum copy_how):  New.
-        (struct sra_elt):  Change use_block_copy to how_to_copy.
-        (instantiate_element_integer):  New.
-        (decide_block_copy):  Rewrite logic.
-        (generate_copy_inout):  Use how_to_copy.
-        (generate_element_zero):  Ditto.
-        (scalarize_copy):  Ditto.
-        (scalarize_init):  Ditto.
-        (scalarize_ldst):  Ditto.
+	Radar 4158356
+	* tree-sra.c (enum copy_how):  New.
+	(struct sra_elt):  Change use_block_copy to how_to_copy.
+	(instantiate_element_integer):  New.
+	(decide_block_copy):  Rewrite logic.
+	(generate_copy_inout):  Use how_to_copy.
+	(generate_element_zero):  Ditto.
+	(scalarize_copy):  Ditto.
+	(scalarize_init):  Ditto.
+	(scalarize_ldst):  Ditto.
 
 2005-06-30 Devang Patel  <dpatel@apple.com>
 
@@ -6367,8 +7250,8 @@
 
 	Undo
 	2005-06-04  Devang Patel  <dpatel@apple.com>
-        * dbxout.c (struct dbx_file): Apply GTY markers.
-        (dbxout_init, dbxout_start_source_file): Use ggc_alloc instead of xmalloc.
+	* dbxout.c (struct dbx_file): Apply GTY markers.
+	(dbxout_init, dbxout_start_source_file): Use ggc_alloc instead of xmalloc.
 
 2005-06-15  Geoffrey Keating  <geoffk@apple.com>
 
@@ -6553,14 +7436,14 @@
 
 2005-05-07  Stuart Hastings  <stuart@apple.com>
 
-        Radar 4099020
-        * config/i386/sse.md (sse_loadqv4s, sse_storeqv4si, sse_movqv4si): New.
-        * config/i386/i386.c (IX86_BUILTIN_MOVQ,
-        IX86_BUILTIN_LOADQ, IX86_BUILTIN_STOREQ): New.
-        (__builtin_ia32_movqv4si, __builtin_ia32_loadlv4si, __builtin_ia32_storelv4si): New.
-        * emmintrin.h (_mm_loadl_epi64, _mm_storel_epi64, _mm_move_epi64): Use them.
-        * config/i386/mmx.md: Exempt SSE subregs from multiword split.
-        * simplify-rtx.c(simplify_immed_subreg): Exit cleanly if outermode too wide.
+	Radar 4099020
+	* config/i386/sse.md (sse_loadqv4s, sse_storeqv4si, sse_movqv4si): New.
+	* config/i386/i386.c (IX86_BUILTIN_MOVQ,
+	IX86_BUILTIN_LOADQ, IX86_BUILTIN_STOREQ): New.
+	(__builtin_ia32_movqv4si, __builtin_ia32_loadlv4si, __builtin_ia32_storelv4si): New.
+	* emmintrin.h (_mm_loadl_epi64, _mm_storel_epi64, _mm_move_epi64): Use them.
+	* config/i386/mmx.md: Exempt SSE subregs from multiword split.
+	* simplify-rtx.c(simplify_immed_subreg): Exit cleanly if outermode too wide.
 
 2005-05-06  Dale Johannesen  <dalej@apple.com>
 
@@ -6605,11 +7488,11 @@
 
 	Radar 4102133  (PR 21293, Zdenek's patch)
 	* tree-cfg.c (find_taken_edge_cond_expr): Use zero_p instead of
-        integer_zerop.
-        * tree-gimple.c (is_gimple_min_invariant): Consider overflowed
-        constants invariant.
-        * fortran/trans-intrinsic.c (gfc_conv_intrinsic_ishft): Convert
-        the argument of the shift to the unsigned type.
+	integer_zerop.
+	* tree-gimple.c (is_gimple_min_invariant): Consider overflowed
+	constants invariant.
+	* fortran/trans-intrinsic.c (gfc_conv_intrinsic_ishft): Convert
+	the argument of the shift to the unsigned type.
 
 2005-04-28  Devang Patel  <dpatel@apple.com>
 
@@ -6856,29 +7739,29 @@
 	* config/darwin.c (machopic_select_section): Change name for function
 	to switch to cold text section to unlikely_text_section
 	(the correct function name, in varasm.c).
-        * config/darwin.h (SECTION_FUNCTION): Remove code that created a second
-        (incorrect) function for switching to cold text section.
+	* config/darwin.h (SECTION_FUNCTION): Remove code that created a second
+	(incorrect) function for switching to cold text section.
 
 2005-04-14  Devang Patel  <dpatel@apple.com>
 
 	Radar 4080840
-        * common.opt (falign-jumps-max-skip, falign-jumps-max-skip=,
-        falign-loops-max-skip, falign-loops-max-skip=): New.
-        * opts.c (common_handle_option): Handle new falign-loops-max-skip
-        and falign-jumps-max-skip options.
-        * doc/invoke.texi: Document -falign-jumps-max-skip and
-        -falign-loops-max-skip.
+	* common.opt (falign-jumps-max-skip, falign-jumps-max-skip=,
+	falign-loops-max-skip, falign-loops-max-skip=): New.
+	* opts.c (common_handle_option): Handle new falign-loops-max-skip
+	and falign-jumps-max-skip options.
+	* doc/invoke.texi: Document -falign-jumps-max-skip and
+	-falign-loops-max-skip.
 	* toplev.c (align_jumps_max_skip, align_loops_max_skip): Remove.
 
 2005-04-14  Devang Patel  <dpatel@apple.com>
 
 	Radar 3972515
-        * config/rs600/altivec.md (altivec_vsr<VI_char>): Rename to ..
-        (lhsr<mode>3): ... new name.
-        (altivec_vsra<VI_char>): Rename to ..
-        (ashr<mode>3): ... new name.
-        * config/rs6000/rs6000.c (builtin_description): Rename shift
-        operations.
+	* config/rs600/altivec.md (altivec_vsr<VI_char>): Rename to ..
+	(lhsr<mode>3): ... new name.
+	(altivec_vsra<VI_char>): Rename to ..
+	(ashr<mode>3): ... new name.
+	* config/rs6000/rs6000.c (builtin_description): Rename shift
+	operations.
 
 2005-04-12  Geoffrey Keating  <geoffk@apple.com>
 
@@ -6914,7 +7797,7 @@
 2005-04-07  Devang Patel  <dpatel@apple.com>
 
 	Radar 4069922
-        * tree-sra.c (decide_block_copy): Disable scalarization of sub-elements.
+	* tree-sra.c (decide_block_copy): Disable scalarization of sub-elements.
 
 2005-04-05  Fariborz Jahanian <fjahanian@apple.com>
 
@@ -6976,9 +7859,9 @@
 
 2005-03-22  Devang Patel  <dpatel@apple.com>
 
-        Radar 4023104
-        * config/darwin-driver.c (dash_capital_m_seen): Remove.
-        (main) : Do not handle -M options.
+	Radar 4023104
+	* config/darwin-driver.c (dash_capital_m_seen): Remove.
+	(main) : Do not handle -M options.
 
 2005-03-21  Stuart Hastings  <stuart@apple.com>
 
@@ -7023,7 +7906,7 @@
 
 2005-03-11  Devang Patel  <dpatel@apple.com>
 
-        * target.h: Reinsert one line comment.
+	* target.h: Reinsert one line comment.
 
 2005-03-11  Ziemowit Laski  <zlaski@apple.com>
 
@@ -7101,10 +7984,10 @@
 2005-03-06  Devang Patel  <dpatel@apple.com>
 
 	Radar 4025991
-        * tree-vectorizer.c (vect_is_simple_cond): Now second parameter is
-        loop_vec_info instead of loop *.
-        (vectorizable_select): Supply loop_vec_info to vect_is_simple_use.
-        (vect_build_dist_vector): Use loop nest's depth.
+	* tree-vectorizer.c (vect_is_simple_cond): Now second parameter is
+	loop_vec_info instead of loop *.
+	(vectorizable_select): Supply loop_vec_info to vect_is_simple_use.
+	(vect_build_dist_vector): Use loop nest's depth.
 
 2005-03-06  Devang Patel  <dpatel@apple.com>
 
@@ -7186,8 +8069,8 @@
 
 2005-02-23  Devang Patel  <dpatel@apple.com>
 
-        Radar 3841402 3841397 3841275
-        * config/darwin-driver.c (add_arch_options): Do not supply
+	Radar 3841402 3841397 3841275
+	* config/darwin-driver.c (add_arch_options): Do not supply
 	-march=i386. Interpret -arch pentIIm3 appropriately.
 
 2005-02-22  Devang Patel  <dpatel@apple.com>
@@ -7197,9 +8080,9 @@
 
 	2005-01-18  Andi Kleen <ak@muc.de>
 
-        * c-typeck.c (convert_for_assignment): Check warn_pointer_sign.
-        * c.opt (-Wpointer-sign): Add.
-        * doc/invoke.texi (-Wpointer-sign): Add.
+	* c-typeck.c (convert_for_assignment): Check warn_pointer_sign.
+	* c.opt (-Wpointer-sign): Add.
+	* doc/invoke.texi (-Wpointer-sign): Add.
 
 2005-02-21  Dale Johannesen  <dalej@apple.com>
 
@@ -7239,7 +8122,7 @@
 
 2005-02-17  Devang Patel  <dpatel@apple.com>
 
-        Undo Radar 3964387 fix.
+	Undo Radar 3964387 fix.
 
 2005-02-17  Fariborz Jahanian <fjahanian@apple.com>
 
@@ -7307,18 +8190,18 @@
 
 2004-02-16  Devang Patel  <dpatel@apple.com>
 
-        Radar 3964387
-        * build_gcc: Build darwin-driver-rs6000.c and darwin-driver-i386.c
-        * config/darwin-driver-rs6000.c: New file
-        * config/darwin-driver-i386.c: New file
-        * config/darwin-driver.h: New file
-        * config/darwin-driver.c (darwin-driver.h): Include.
-        (ppc_specific_args, ppc_specific_args_size, ppc_specific_arg_count,
-        x86_specific_args, x86_specific_args_size, x86_specific_arg_count,
-        is_ppc_specific_option, is_x86_specific_option): New.
-        (remove_arch_options): New parameter.
-        (add_arch_options): Insert arch specific options.
-        (main): Interpret arch specific options.
+	Radar 3964387
+	* build_gcc: Build darwin-driver-rs6000.c and darwin-driver-i386.c
+	* config/darwin-driver-rs6000.c: New file
+	* config/darwin-driver-i386.c: New file
+	* config/darwin-driver.h: New file
+	* config/darwin-driver.c (darwin-driver.h): Include.
+	(ppc_specific_args, ppc_specific_args_size, ppc_specific_arg_count,
+	x86_specific_args, x86_specific_args_size, x86_specific_arg_count,
+	is_ppc_specific_option, is_x86_specific_option): New.
+	(remove_arch_options): New parameter.
+	(add_arch_options): Insert arch specific options.
+	(main): Interpret arch specific options.
 
 2005-02-16  Fariborz Jahanian <fjahanian@apple.com>
 
@@ -7375,8 +8258,8 @@
 2005-02-11  Devang Patel  <dpatel@apple.com>
 
 	Radar 3996800
-        * gcc.c (cpp_uniq_options): Emit '-mconstant-cfstrings' option,
-        if needed.
+	* gcc.c (cpp_uniq_options): Emit '-mconstant-cfstrings' option,
+	if needed.
 
 2005-02-09  Dale Johannesen  <dalej@apple.com>
 

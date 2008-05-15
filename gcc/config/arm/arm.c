@@ -158,9 +158,13 @@ static int arm_arg_partial_bytes (CUMULATIVE_ARGS *, enum machine_mode,
 #ifdef OBJECT_FORMAT_ELF
 static void arm_elf_asm_constructor (rtx, int);
 #endif
-#ifndef ARM_PE
+/* APPLE LOCAL begin ARM darwin section_info */
+#if TARGET_MACHO
+static void arm_darwin_encode_section_info (tree, rtx, int);
+#elif !defined(ARM_PE)
 static void arm_encode_section_info (tree, rtx, int);
 #endif
+/* APPLE LOCAL end ARM darwin section_info */
 
 static void arm_file_end (void);
 
@@ -291,6 +295,10 @@ static bool arm_binds_local_p (tree);
 #undef TARGET_ENCODE_SECTION_INFO
 #ifdef ARM_PE
 #define TARGET_ENCODE_SECTION_INFO  arm_pe_encode_section_info
+/* APPLE LOCAL begin ARM darwin section_info */
+#elif  TARGET_MACHO
+#define TARGET_ENCODE_SECTION_INFO  arm_darwin_encode_section_info
+/* APPLE LOCAL end ARM darwin section_info */
 #else
 #define TARGET_ENCODE_SECTION_INFO  arm_encode_section_info
 #endif
@@ -4922,6 +4930,113 @@ thumb_rtx_costs (rtx x, enum rtx_code code, enum rtx_code outer)
     }
 }
 
+/* APPLE LOCAL begin ARM size variant of thumb costs */
+/* This is very much a work in progress; it is just thumb_rtx_costs
+   with modifications for size as discovered.  Currently, the costs
+   for MULT, AND, XOR, IOR have been fixed; all of these are single
+   instructions.  (Not for DImode, but that's not taken into account
+   anywhere here.)  */
+
+static inline int
+thumb_size_rtx_costs (rtx x, enum rtx_code code, enum rtx_code outer)
+{
+  enum machine_mode mode = GET_MODE (x);
+
+  switch (code)
+    {
+    case ASHIFT:
+    case ASHIFTRT:
+    case LSHIFTRT:
+    case ROTATERT:
+    case PLUS:
+    case MINUS:
+    case COMPARE:
+    case NEG:
+    case NOT:
+    case AND:
+    case XOR:
+    case IOR:
+    case MULT:
+      return COSTS_N_INSNS (1);
+
+    case SET:
+      return (COSTS_N_INSNS (1)
+	      + 4 * ((GET_CODE (SET_SRC (x)) == MEM)
+		     + GET_CODE (SET_DEST (x)) == MEM));
+
+    case CONST_INT:
+      if (outer == SET)
+	{
+	  if ((unsigned HOST_WIDE_INT) INTVAL (x) < 256)
+	    return 0;
+	  if (thumb_shiftable_const (INTVAL (x)))
+	    return COSTS_N_INSNS (2);
+	  return COSTS_N_INSNS (3);
+	}
+      else if ((outer == PLUS || outer == COMPARE)
+	       && INTVAL (x) < 256 && INTVAL (x) > -256)
+	return 0;
+      else if (outer == AND
+	       && INTVAL (x) < 256 && INTVAL (x) >= -256)
+	return COSTS_N_INSNS (1);
+      else if (outer == ASHIFT || outer == ASHIFTRT
+	       || outer == LSHIFTRT)
+	return 0;
+      return COSTS_N_INSNS (2);
+
+    case CONST:
+    case CONST_DOUBLE:
+    case LABEL_REF:
+    case SYMBOL_REF:
+      return COSTS_N_INSNS (3);
+
+    case UDIV:
+    case UMOD:
+    case DIV:
+    case MOD:
+      return 100;
+
+    case TRUNCATE:
+      return 99;
+
+    case MEM:
+      /* XXX another guess.  */
+      /* Memory costs quite a lot for the first word, but subsequent words
+	 load at the equivalent of a single insn each.  */
+      return (10 + 4 * ((GET_MODE_SIZE (mode) - 1) / UNITS_PER_WORD)
+	      + ((GET_CODE (x) == SYMBOL_REF && CONSTANT_POOL_ADDRESS_P (x))
+		 ? 4 : 0));
+
+    case IF_THEN_ELSE:
+      /* XXX a guess.  */
+      if (GET_CODE (XEXP (x, 1)) == PC || GET_CODE (XEXP (x, 2)) == PC)
+	return 14;
+      return 2;
+
+    case ZERO_EXTEND:
+      /* XXX still guessing.  */
+      switch (GET_MODE (XEXP (x, 0)))
+	{
+	case QImode:
+	  return (1 + (mode == DImode ? 4 : 0)
+		  + (GET_CODE (XEXP (x, 0)) == MEM ? 10 : 0));
+
+	case HImode:
+	  return (4 + (mode == DImode ? 4 : 0)
+		  + (GET_CODE (XEXP (x, 0)) == MEM ? 10 : 0));
+
+	case SImode:
+	  return (1 + (GET_CODE (XEXP (x, 0)) == MEM ? 10 : 0));
+
+	default:
+	  return 99;
+	}
+
+    default:
+      return 99;
+    }
+}
+/* APPLE LOCAL end ARM size variant of thumb costs */
 
 /* Worker routine for arm_rtx_costs.  */
 static inline int
@@ -5180,8 +5295,9 @@ arm_size_rtx_costs (rtx x, int code, int outer_code, int *total)
 
   if (TARGET_THUMB)
     {
-      /* XXX TBD.  For now, use the standard costs.  */
-      *total = thumb_rtx_costs (x, code, outer_code);
+      /* APPLE LOCAL begin ARM size variant of thumb costs */
+      *total = thumb_size_rtx_costs (x, code, outer_code);
+      /* APPLE LOCAL end ARM size variant of thumb costs */
       return true;
     }
 
@@ -5289,9 +5405,34 @@ arm_size_rtx_costs (rtx x, int code, int outer_code, int *total)
       *total = COSTS_N_INSNS (ARM_NUM_REGS (mode));
       return false;
 
+    /* APPLE LOCAL begin DImode multiply enhancement */
     case MULT:
+      if (mode == DImode)
+	{
+	  if (((GET_CODE (XEXP (x, 0)) == SIGN_EXTEND
+	           && GET_CODE (XEXP (x, 1)) == SIGN_EXTEND)
+	        || (GET_CODE (XEXP (x, 0)) == ZERO_EXTEND
+	            && GET_CODE (XEXP (x, 1)) == ZERO_EXTEND))
+	       && GET_MODE (XEXP (XEXP (x, 0), 0)) == SImode
+	       && GET_MODE (XEXP (XEXP (x, 1), 0)) == SImode)
+	    {
+	      /* SMULL, etc., do sign extend better than free */
+	      *total = COSTS_N_INSNS (1)
+	               + rtx_cost (XEXP (XEXP (x, 0), 0), MULT)
+	               + rtx_cost (XEXP (XEXP (x, 1), 0), MULT);
+	      return true;
+	    }
+	  else
+	    {
+	      /* broken into 3 insns later, plus cost of kids */
+	      /** does not allow for Cirrus instruction **/
+	      *total = COSTS_N_INSNS (3);
+	      return false;
+	    }
+	}
       *total = COSTS_N_INSNS (ARM_NUM_REGS (mode));
       return false;
+    /* APPLE LOCAL end DImode multiply enhancement */
 
     case NEG:
       if (TARGET_HARD_FLOAT && GET_MODE_CLASS (mode) == MODE_FLOAT)
@@ -8921,6 +9062,75 @@ arm_const_double_inline_cost (rtx val)
 	  + arm_gen_constant (SET, SImode, NULL_RTX, INTVAL (highpart),
 			      NULL_RTX, NULL_RTX, 0, 0));
 }
+
+/* APPLE LOCAL begin 5831562 long long constants */
+/* Return true if a 64-bit constant consists of two 32-bit halves,
+   each of which is a valid immediate data-processing operand.
+   (This differs from other 64-bit evaluations in that ~const is
+   not considered.)
+*/
+
+bool
+const64_ok_for_arm_immediate (rtx val)
+{
+  rtx lowpart, highpart;
+  enum machine_mode mode;
+
+  if (!TARGET_ARM)
+    return false;
+
+  mode = GET_MODE (val);
+
+  if (mode == VOIDmode)
+    mode = DImode;
+
+  gcc_assert (GET_MODE_SIZE (mode) == 8);
+
+  lowpart = gen_lowpart (SImode, val);
+  highpart = gen_highpart_mode (SImode, mode, val);
+
+  gcc_assert (GET_CODE (lowpart) == CONST_INT);
+  gcc_assert (GET_CODE (highpart) == CONST_INT);
+
+  return (const_ok_for_arm (INTVAL (lowpart))
+	  && const_ok_for_arm (INTVAL (highpart)));
+}
+
+/* As above, but allow for constants whose negative value
+   fits as well.  Both halves must match either as themselves
+   or as negated.  */
+bool
+const64_ok_for_arm_add (rtx val)
+{
+  rtx lowpart, highpart, lowpart_neg, highpart_neg, val_neg;
+  enum machine_mode mode;
+
+  if (!TARGET_ARM)
+    return false;
+
+  mode = GET_MODE (val);
+
+  if (mode == VOIDmode)
+    mode = DImode;
+
+  gcc_assert (GET_MODE_SIZE (mode) == 8);
+
+  lowpart = gen_lowpart (SImode, val);
+  highpart = gen_highpart_mode (SImode, mode, val);
+
+  val_neg = negate_rtx (mode, val);
+  lowpart_neg = gen_lowpart (SImode, val_neg);
+  highpart_neg = gen_highpart_mode (SImode, mode, val_neg);
+
+  gcc_assert (GET_CODE (lowpart) == CONST_INT);
+  gcc_assert (GET_CODE (highpart) == CONST_INT);
+
+  return ((const_ok_for_arm (INTVAL (lowpart))
+	   && const_ok_for_arm (INTVAL (highpart)))
+	  || (const_ok_for_arm (INTVAL (lowpart_neg))
+	      && const_ok_for_arm (INTVAL (highpart_neg))));
+}
+/* APPLE LOCAL end 5831562 long long constants */
 
 /* Return true if it is worthwhile to split a 64-bit constant into two
    32-bit operations.  This is the case if optimizing for size, or
@@ -15936,7 +16146,8 @@ aof_file_end (void)
 }
 #endif /* AOF_ASSEMBLER */
 
-#ifndef ARM_PE
+/* APPLE LOCAL ARM darwin section_info */
+#if !defined(ARM_PE) && !TARGET_MACHO
 /* Symbols in the text segment can be accessed without indirecting via the
    constant pool; it may take an extra binary operation, but this is still
    faster than indirecting via memory.  Don't do this when not optimizing,
@@ -15946,12 +16157,6 @@ aof_file_end (void)
 static void
 arm_encode_section_info (tree decl, rtx rtl, int first)
 {
-  /* APPLE LOCAL begin ARM darwin section_info */
-#if TARGET_MACHO
-  darwin_encode_section_info (decl, rtl, first);
-#endif
-  /* APPLE LOCAL end ARM darwin section_info */
-
   /* This doesn't work with AOF syntax, since the string table may be in
      a different AREA.  */
 #ifndef AOF_ASSEMBLER
@@ -15962,16 +16167,6 @@ arm_encode_section_info (tree decl, rtx rtl, int first)
   /* If we are referencing a function that is weak then encode a long call
      flag in the function name, otherwise if the function is static or
      or known to be defined in this file then encode a short call flag.  */
-/* APPLE LOCAL begin ARM longcall */
-#if TARGET_MACHO
-  if (DECL_P (decl))
-    {
-      if (TREE_CODE (decl) == FUNCTION_DECL && DECL_WEAK (decl))
-        arm_encode_call_attribute (decl, SYMBOL_LONG_CALL);
-      else if (! TREE_PUBLIC (decl))
-        arm_encode_call_attribute (decl, SYMBOL_SHORT_CALL);
-    }
-#else
   if (first && DECL_P (decl))
     {
       if (TREE_CODE (decl) == FUNCTION_DECL && DECL_WEAK (decl))
@@ -15979,12 +16174,36 @@ arm_encode_section_info (tree decl, rtx rtl, int first)
       else if (! TREE_PUBLIC (decl))
         arm_encode_call_attribute (decl, SHORT_CALL_FLAG_CHAR);
     }
-#endif
-/* APPLE LOCAL end ARM longcall */
 
   default_encode_section_info (decl, rtl, first);
 }
-#endif /* !ARM_PE */
+/* APPLE LOCAL begin ARM darwin section_info */
+#endif /* !ARM_PE && !TARGET_MACHO*/
+
+#if TARGET_MACHO
+/* Encode the standard darwin attributes, plus the longcall flag.  */
+
+static void
+arm_darwin_encode_section_info (tree decl, rtx rtl, int first)
+{
+  darwin_encode_section_info (decl, rtl, first);
+
+  if (optimize > 0 && TREE_CONSTANT (decl))
+    SYMBOL_REF_FLAG (XEXP (rtl, 0)) = 1;
+
+  /* If we are referencing a function that is weak then encode a long call
+     flag in the function name, otherwise if the function is static or
+     or known to be defined in this file then encode a short call flag.  */
+  if (DECL_P (decl))
+    {
+      if (TREE_CODE (decl) == FUNCTION_DECL && DECL_WEAK (decl))
+        arm_encode_call_attribute (decl, SYMBOL_LONG_CALL);
+      else if (! TREE_PUBLIC (decl))
+        arm_encode_call_attribute (decl, SYMBOL_SHORT_CALL);
+    }
+}
+#endif
+/* APPLE LOCAL end ARM darwin section_info */
 
 static void
 arm_internal_label (FILE *stream, const char *prefix, unsigned long labelno)
@@ -16567,7 +16786,8 @@ arm_dbx_register_number (unsigned int regno)
     return (TARGET_AAPCS_BASED ? 96 : 16) + regno - FIRST_FPA_REGNUM;
 
   if (IS_VFP_REGNUM (regno))
-    return 64 + regno - FIRST_VFP_REGNUM;
+    /* APPLE LOCAL ARM 5757769 */
+    return 256 + regno - FIRST_VFP_REGNUM;
 
   if (IS_IWMMXT_GR_REGNUM (regno))
     return 104 + regno - FIRST_IWMMXT_GR_REGNUM;
@@ -16963,7 +17183,7 @@ void
 machopic_output_stub (FILE *file, const char *symb, const char *stub)
 {
   unsigned int length;
-  char *symbol_name, *lazy_ptr_name;
+  char *symbol_name, *lazy_ptr_name, *slp_label_name;
   static int label = 0;
 
   /* Lose our funky encoding stuff so it doesn't contaminate the stub.  */
@@ -16975,6 +17195,9 @@ machopic_output_stub (FILE *file, const char *symb, const char *stub)
 
   lazy_ptr_name = alloca (length + 32);
   GEN_LAZY_PTR_NAME_FOR_SYMBOL (lazy_ptr_name, symb, length);
+
+  slp_label_name = alloca (length + 32);
+  GEN_SUFFIXED_NAME_FOR_SYMBOL (slp_label_name, symb, length, "$slp");
 
   if (flag_pic == 2)
     switch_to_section (darwin_sections[machopic_picsymbol_stub4_section]);
@@ -16988,7 +17211,7 @@ machopic_output_stub (FILE *file, const char *symb, const char *stub)
 
   fprintf (file, "%s:\n", stub);
   fprintf (file, "\t.indirect_symbol %s\n", symbol_name);
-  fprintf (file, "\tldr\tip, L%s$slp\n", symbol_name);
+  fprintf (file, "\tldr\tip, %s\n", slp_label_name);
 
   label++;
 
@@ -16998,11 +17221,11 @@ machopic_output_stub (FILE *file, const char *symb, const char *stub)
   fprintf (file, "\tldr\tpc, [ip, #0]\n");
 
   if (flag_pic == 2)
-    fprintf (file, "L%s$slp:\n\t.long\tL%s$lazy_ptr - (L%d$scv + 8)\n",
-	     symbol_name, symbol_name, label);
+    fprintf (file, "%s:\n\t.long\t%s - (L%d$scv + 8)\n",
+	     slp_label_name, lazy_ptr_name, label);
   else
-    fprintf (file, "L%s$slp:\n\t.long\tL%s$lazy_ptr\n",
-	     symbol_name, symbol_name);
+    fprintf (file, "%s:\n\t.long\t%s\n",
+	     slp_label_name, lazy_ptr_name);
       
   switch_to_section (darwin_sections[machopic_lazy_symbol_ptr_section]);
   fprintf (file, "%s:\n", lazy_ptr_name);
@@ -17037,9 +17260,8 @@ optimization_options (int level, int size ATTRIBUTE_UNUSED)
      in darwin-c.c).  */
   flag_trapping_math = 0;
 
-  /* Disable local RA.  */
   /* APPLE LOCAL conditionally disable local RA */
-  /* flag_local_alloc = 0; */
+  flag_local_alloc = 0;
   /* APPLE LOCAL rerun cse after combine */
   /* flag_rerun_cse_after_combine = 1; */
   
@@ -17116,5 +17338,126 @@ int arm_label_align (rtx label)
   return align_labels_log;
 }
 /* APPLE LOCAL end ARM compact switch tables */
+
+/* APPLE LOCAL begin ARM enhance conditional insn generation */
+/* A C expression to modify the code described by the conditional if
+   information CE_INFO, for the basic block BB, possibly updating the tests in
+   TRUE_EXPR, and FALSE_EXPR for converting the && and || parts of if-then or
+   if-then-else code to conditional instructions.  Set either TRUE_EXPR or
+   FALSE_EXPR to a null pointer if the tests cannot be converted.  */
+
+/* p_true and p_false are given expressions of the form:
+
+	(and (relop:CC (reg:CC) (const_int 0))
+	     (relop:CC (reg:CC) (const_int 0)))
+
+  We try to simplify them to something that will work in a branch instruction.
+  If we can't do anything useful, return; the caller will try to substitute
+  the complex expression and will fail.
+  Currently the true and false cases are not handled.
+  It's surprising that there isn't already a routine somewhere that does this,
+  but I couldn't find one. */
+ 
+void
+arm_ifcvt_modify_multiple_tests (ce_if_block_t *ce_info ATTRIBUTE_UNUSED,
+                                 basic_block bb ATTRIBUTE_UNUSED,
+                                 rtx *p_true,
+                                 rtx *p_false)
+{
+  /* There is a dependency here on the order of codes in rtl.def,
+     also an assumption that none of the useful enum values will
+     collide with 0 or 1.  
+     Order is:  NE EQ GE GT LE LT GEU GTU LEU LTU */
+  static RTX_CODE and_codes[10][10] =
+	{ {  NE,  0, GT, GT, LT, LT, GTU, GTU, LTU, LTU },
+	  {   0, EQ, EQ,  0, EQ,  0,  EQ,   0,  EQ,   0 },
+	  {  GT, EQ, GE, GT, EQ,  0,   0,   0,   0,   0 },
+	  {  GT,  0, GT, GT,  0,  0,   0,   0,   0,   0 },
+	  {  LT, EQ, EQ,  0, LE, LT,   0,   0,   0,   0 },
+	  {  LT,  0,  0,  0, LT, LT,   0,   0,   0,   0 },
+	  { GTU, EQ,  0,  0,  0,  0, GEU, GTU,  EQ,   0 },
+	  { GTU,  0,  0,  0,  0,  0, GTU, GTU,   0,   0 },
+	  { LTU, EQ,  0,  0,  0,  0,  EQ,   0, LEU, LTU },
+	  { LTU,  0,  0,  0,  0,  0,   0,   0, LTU, LTU } };
+
+  static RTX_CODE or_codes[10][10] =
+	{ { NE,   1,  1, NE,  1, NE,   1,  NE,   1,  NE },
+	  {  1,  EQ, GE, GE, LE, LE, GEU, GEU, LEU, LEU },
+	  {  1,  GE, GE, GE,  1,  1,   0,   0,   0,   0 },
+	  { NE,  GE, GE, GT,  1, NE,   0,   0,   0,   0 },
+	  {  1,  LE,  1,  1, LE, LE,   0,   0,   0,   0 },
+	  { NE,  LE,  1, NE, LE, LT,   0,   0,   0,   0 },
+	  {  1, GEU,  0,  0,  0,  0, GEU, GEU,   1,   1 },
+	  { NE, GEU,  0,  0,  0,  0, GEU, GTU,   1,  NE },
+	  {  1, LEU,  0,  0,  0,  0,   1,   1, LEU, LEU },
+	  { NE, LEU,  0,  0,  0,  0,   1,  NE, LEU, LTU } };
+
+  rtx true_lhs = XEXP (*p_true, 0);
+  rtx false_lhs = XEXP (*p_false, 0);
+  rtx true_rhs = XEXP (*p_true, 1);
+  rtx false_rhs = XEXP (*p_false, 1);
+  int true_and_p, false_and_p;
+  RTX_CODE merged_code;
+
+  if (!TARGET_ARM)
+    return;
+
+  if (GET_CODE (*p_true) == AND)
+    true_and_p = true;
+  else if (GET_CODE (*p_true) == IOR)
+    true_and_p = false;
+  else
+    return;
+
+  if (GET_CODE (*p_false) == AND)
+    false_and_p = true;
+  else if (GET_CODE (*p_false) == IOR)
+    false_and_p = false;
+  else
+    return;
+
+  if (!cc_register (XEXP (true_lhs, 0), CCmode)
+      || !cc_register (XEXP (true_lhs, 0), CCmode)
+      || !cc_register (XEXP (true_lhs, 0), CCmode)
+      || !cc_register (XEXP (true_lhs, 0), CCmode))
+    return;
+
+  if (XEXP (true_lhs, 1) != const0_rtx
+      || XEXP (true_rhs, 1) != const0_rtx
+      || XEXP (false_lhs, 1) != const0_rtx
+      || XEXP (false_rhs, 1) != const0_rtx)
+    return;
+
+  if (GET_CODE (true_lhs) < NE || GET_CODE (true_lhs) > LTU
+      || GET_CODE (true_rhs) < NE || GET_CODE (true_rhs) > LTU)
+    *p_true = 0;
+  else
+    {
+      if (true_and_p)
+        merged_code = and_codes [GET_CODE (true_lhs) - NE][GET_CODE (true_rhs) - NE];
+      else
+        merged_code = or_codes [GET_CODE (true_lhs) - NE][GET_CODE (true_rhs) - NE];
+      if (merged_code == 0 || merged_code == 1)
+	*p_true = 0;
+      else
+	*p_true = gen_rtx_fmt_ee (merged_code, VOIDmode, gen_rtx_REG (CCmode, CC_REGNUM), const0_rtx);
+    }
+
+  if (GET_CODE (false_lhs) < NE || GET_CODE (false_lhs) > LTU
+      || GET_CODE (false_rhs) < NE || GET_CODE (false_rhs) > LTU)
+    *p_false = 0;
+  else
+    {
+      if (false_and_p)
+        merged_code = and_codes [GET_CODE (false_lhs) - NE][GET_CODE (false_rhs) - NE];
+      else
+        merged_code = or_codes [GET_CODE (false_lhs) - NE][GET_CODE (false_rhs) - NE];
+      if (merged_code == 0 || merged_code == 1)
+	*p_false = 0;
+      else
+        *p_false = gen_rtx_fmt_ee (merged_code, VOIDmode, gen_rtx_REG (CCmode, CC_REGNUM), const0_rtx);
+    }
+}
+/* APPLE LOCAL end ARM enhance conditional insn generation */
 
 #include "gt-arm.h"

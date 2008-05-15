@@ -969,6 +969,26 @@ extern int arm_structure_size_boundary;
     95				    \
 }
 
+/* APPLE LOCAL begin 5831562 add DIMODE_REG_ALLOC_ORDER */
+#define DIMODE_REG_ALLOC_ORDER  	    \
+{                                   \
+     2,  3,  1,  0, 12, 14,  4,  5, \
+     6,  7,  8, 10,  9, 11, 13, 15, \
+    16, 17, 18, 19, 20, 21, 22, 23, \
+    27, 28, 29, 30, 31, 32, 33, 34, \
+    35, 36, 37, 38, 39, 40, 41, 42, \
+    43, 44, 45, 46, 47, 48, 49, 50, \
+    51, 52, 53, 54, 55, 56, 57, 58, \
+    59, 60, 61, 62,		    \
+    24, 25, 26,			    \
+    78, 77, 76, 75, 74, 73, 72, 71, \
+    70, 69, 68, 67, 66, 65, 64, 63, \
+    79, 80, 81, 82, 83, 84, 85, 86, \
+    87, 88, 89, 90, 91, 92, 93, 94, \
+    95				    \
+}
+/* APPLE LOCAL end 5831562 add DIMODE_REG_ALLOC_ORDER */
+
 /* Interrupt functions can only use registers that have already been
    saved by the prologue, even if they would normally be
    call-clobbered.  */
@@ -2093,7 +2113,8 @@ do {							\
 do {									\
   int idx, size = GET_MODE_SIZE (GET_MODE (BODY));			\
   int pack = (TARGET_THUMB) ? 2 : 4;					\
-  int base_addr = INSN_ADDRESSES (INSN_UID (LABEL));			\
+  /* APPLE LOCAL 5837498 assembler expr for (L1-L2)/2 */		\
+  /* removed unused variable "base_addr" */				\
   int base_label_no = CODE_LABEL_NUMBER (LABEL);			\
   int vlen = XVECLEN (BODY, 1); /*includes trailing default */		\
   const char* directive;						\
@@ -2115,12 +2136,17 @@ do {									\
   for (idx = 0; idx < vlen; idx++)					\
     {									\
       rtx target_label = XEXP (XVECEXP (BODY, 1, idx), 0);		\
-      int target_addr = INSN_ADDRESSES (INSN_UID (target_label));	\
+      /* APPLE LOCAL begin 5837498 assembler expr for (L1-L2)/2 */	\
       if (GET_MODE (BODY) != SImode)					\
-	asm_fprintf (file, "\t%s\t%d @ (L%d-L%d)/%d\n",			\
-	  directive,							\
-	  (target_addr - base_addr) / pack,				\
-	  CODE_LABEL_NUMBER (target_label), base_label_no, pack);	\
+        {								\
+	  /* ARM mode is always SImode bodies */			\
+	  gcc_assert (!TARGET_ARM);					\
+	  /* APPLE LOCAL 5903944 */					\
+	  asm_fprintf (file, "\t%s\t(L%d-L%d)/%d\n",			\
+	    directive,							\
+	    CODE_LABEL_NUMBER (target_label), base_label_no, pack);	\
+        }								\
+      /* APPLE LOCAL end 5837498 assembler expr for (L1-L2)/2 */	\
       else if (!TARGET_THUMB)						\
 	asm_fprintf (file, "\tb\tL%d\n",				\
 			CODE_LABEL_NUMBER (target_label));		\
@@ -2213,9 +2239,25 @@ while (0)
 /* Calling from registers is a massive pain.  */
 #define NO_FUNCTION_CSE 1
 
+/* APPLE LOCAL begin DImode multiply enhancement */
+/* Enable a new optimization in combine.c, see there. */
+#define COMBINE_TRY_RETAIN 1
+/* APPLE LOCAL end DImode multiply enhancement */
+
 /* The machine modes of pointers and functions */
 #define Pmode  SImode
 #define FUNCTION_MODE  Pmode
+
+/* APPLE LOCAL begin ARM enhance conditional insn generation */
+/* A C expression to modify the code described by the conditional if
+   information CE_INFO, for the basic block BB, possibly updating the tests in
+   TRUE_EXPR, and FALSE_EXPR for converting the && and || parts of if-then or
+   if-then-else code to conditional instructions.  OLD_TRUE and OLD_FALSE are
+   the previous tests.  Set either TRUE_EXPR or FALSE_EXPR to a null pointer if
+   the tests cannot be converted.  */
+#define IFCVT_MODIFY_MULTIPLE_TESTS(CE_INFO, BB, TRUE_EXPR, FALSE_EXPR) \
+arm_ifcvt_modify_multiple_tests (CE_INFO, BB, &TRUE_EXPR, &FALSE_EXPR)
+/* APPLE LOCAL end ARM enhance conditional insn generation */
 
 #define ARM_FRAME_RTX(X)					\
   (   (X) == frame_pointer_rtx || (X) == stack_pointer_rtx	\
@@ -2593,6 +2635,10 @@ extern int making_const_table;
 #define OPTIMIZATION_OPTIONS(LEVEL, SIZE) \
   optimization_options ((LEVEL), (SIZE))
 /* APPLE LOCAL end ARM darwin optimization defaults */
+
+/* APPLE LOCAL begin 5831562 ARM pseudo-pseudo tying */
+#define TIE_PSEUDOS 1
+/* APPLE LOCAL end 5831562 ARM pseudo-pseudo tying */
 
 /* APPLE LOCAL begin ARM strings in code */
 /* APPLE LOCAL begin ARM compact switch tables */

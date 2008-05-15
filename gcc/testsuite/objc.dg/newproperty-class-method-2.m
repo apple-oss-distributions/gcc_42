@@ -1,7 +1,7 @@
 /* APPLE LOCAL file radar 5277239 */
 /* Test use of class method calls using property dot-syntax used for
    property 'getter' and 'setter' messaging. */
-/* { dg-options "-mmacosx-version-min=10.5" } */
+/* { dg-options "-mmacosx-version-min=10.5" { target powerpc*-*-darwin* i?86*-*-darwin* } } */
 /* { dg-do compile { target *-*-darwin* } } */
 
 @interface INTF

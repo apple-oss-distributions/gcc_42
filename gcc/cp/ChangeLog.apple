@@ -1,3 +1,30 @@
+2008-05-01  Josh Conner  <jconner@apple.com>
+
+	* optimize.c: Rewrite of structor shrinkage.
+	(enum in_charge_use):  New.
+	(struct thunk_tree_walk_data):  New.
+	(struct clone_info):  New.
+	(maybe_alias_body):  Remove.
+	(examine_tree_for_in_charge_use):  New.
+	(compute_use_thunks):  New.
+	(maybe_thunk_body):  Rename to thunk_body.  Remove
+	explicit in-charge parameter.
+	(find_earlier_clone):  New.
+	(maybe_clone_body):  Remove most of old decloner
+	patch, replace with new algorithm.
+
+2008-03-20  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 5802025
+	* typeck.c (finish_class_member_access_expr): Generate getter call
+	from an OBJC_PROPERTY_REFERENCE_EXPR.
+
+2008-03-19  Fariborz Jahanian <fjahanian@apple.com>
+
+        Radar 5733674
+        * decl.c (expand_static_init): Generate write barrier for
+        static initialization in objective-c++ mode.
+
 2007-11-29  Fariborz Jahanian <fjahanian@apple.com>
 
         Radar 5619052
